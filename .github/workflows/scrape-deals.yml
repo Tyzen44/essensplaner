@@ -30,7 +30,7 @@ jobs:
           libxdamage1 libxrandr2 xdg-utils
 
     - name: Install Node.js dependencies
-      run: npm ci
+      run: npm install
 
     - name: Scrape Angebote
       run: node scraper.js
