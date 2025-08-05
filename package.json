@@ -1,14 +1,18 @@
 {
   "name": "supermarkt-scraper",
-  "version": "1.0.0",
-  "description": "Privater Supermarkt-Angebotsscraper für Migros, Coop, Aldi, Lidl",
+  "version": "2.0.0",
+  "description": "Erweiterter Supermarkt-Angebotsscraper für Migros, Coop, Aldi, Lidl mit Anti-Bot-Umgehung",
   "main": "scraper.js",
   "scripts": {
-    "start": "node scraper.js"
+    "start": "node scraper.js",
+    "test": "node scraper.js"
   },
   "author": "Sven",
   "license": "MIT",
   "dependencies": {
-    "puppeteer": "^21.11.0"
+    "puppeteer": "^21.11.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "node-fetch": "^3.3.2"
   }
 }
