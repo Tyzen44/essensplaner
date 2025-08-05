@@ -2,12 +2,11 @@ const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const path = require('path');
 
-// Starte Scraper
 (async () => {
   console.log('🛒 Starte Scraping der Supermarkt-Angebote...');
 
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: false,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
@@ -34,15 +33,20 @@ const path = require('path');
   }
 })();
 
-// 🟠 MIGROS
+// MIGROS
 async function scrapeMigros(browser) {
   const page = await browser.newPage();
   const deals = [];
   try {
-    await page.goto('https://www.migros.ch/de/offers/home', {
-      waitUntil: 'domcontentloaded', timeout: 30000
+    await page.goto('https://www.migros.ch/de/offers/home', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    // Cookie akzeptieren (falls da)
+    await page.evaluate(() => {
+      document.querySelector('button[aria-label*="Akzeptieren"]')?.click();
     });
-    await page.waitForSelector('[data-testid="product"]', { timeout: 15000 });
+
+    await page.waitForSelector('[data-testid="product"]', { timeout: 10000 });
 
     const items = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('[data-testid="product"]')).map(el => {
@@ -63,15 +67,19 @@ async function scrapeMigros(browser) {
   return deals;
 }
 
-// 🔴 COOP
+// COOP
 async function scrapeCoop(browser) {
   const page = await browser.newPage();
   const deals = [];
   try {
-    await page.goto('https://www.coop.ch/de/aktionen/aktuelle-aktionen/c/m_1011', {
-      waitUntil: 'domcontentloaded', timeout: 30000
+    await page.goto('https://www.coop.ch/de/aktionen/aktuelle-aktionen/c/m_1011', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    await page.evaluate(() => {
+      document.querySelector('button[aria-label*="Akzeptieren"]')?.click();
     });
-    await page.waitForSelector('.product-tile', { timeout: 15000 });
+
+    await page.waitForSelector('.product-tile__title', { timeout: 10000 });
 
     const items = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.product-tile')).map(el => {
@@ -92,25 +100,23 @@ async function scrapeCoop(browser) {
   return deals;
 }
 
-// 🔵 ALDI
+// ALDI
 async function scrapeAldi(browser) {
   const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
   const deals = [];
 
-  const today = new Date();
-  const day = today.getDay();
-  const offset = (day === 1 || day === 4) ? 0 : (day < 4 ? 1 - day : 8 - day); // nächster Montag oder Donnerstag
-  today.setDate(today.getDate() + offset);
-  const dateStr = today.toLocaleDateString('de-CH').replace(/\./g, '-'); // z.B. 12-08-2025
-
-  const aldiUrl = `https://www.aldi-suisse.ch/de/aktionen-und-angebote/d.${dateStr}.html`;
+  const date = getNextAldiDate();
+  const aldiUrl = `https://www.aldi-suisse.ch/de/aktionen-und-angebote/d.${date}.html`;
 
   try {
-    await page.goto(aldiUrl, {
-      waitUntil: 'domcontentloaded', timeout: 30000
+    await page.goto(aldiUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    await page.evaluate(() => {
+      document.querySelector('button[aria-label*="Akzeptieren"]')?.click();
     });
-    await page.waitForSelector('.mod-article-tile', { timeout: 15000 });
+
+    await page.waitForSelector('.mod-article-tile', { timeout: 10000 });
 
     const items = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.mod-article-tile')).map(el => {
@@ -127,19 +133,23 @@ async function scrapeAldi(browser) {
   } finally {
     await page.close();
   }
-  console.log(`✅ Aldi (${dateStr}): ${deals.length} Angebote`);
+  console.log(`✅ Aldi (${date}): ${deals.length} Angebote`);
   return deals;
 }
 
-// 🟢 LIDL
+// LIDL
 async function scrapeLidl(browser) {
   const page = await browser.newPage();
   const deals = [];
   try {
-    await page.goto('https://www.lidl.ch/c/de-CH/lidl-plus-angebote/a10020520?channel=store&tabCode=Current_Sales_Week', {
-      waitUntil: 'domcontentloaded', timeout: 30000
+    await page.goto('https://www.lidl.ch/c/de-CH/lidl-plus-angebote/a10020520?channel=store&tabCode=Current_Sales_Week', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(2000);
+
+    await page.evaluate(() => {
+      document.querySelector('button[aria-label*="Akzeptieren"]')?.click();
     });
-    await page.waitForSelector('.ret-o-card__headline', { timeout: 15000 });
+
+    await page.waitForSelector('.ret-o-card__headline', { timeout: 10000 });
 
     const items = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.ret-o-card')).map(el => {
@@ -160,7 +170,7 @@ async function scrapeLidl(browser) {
   return deals;
 }
 
-// 🔎 Kategorien
+// KATEGORIE ERKENNUNG
 function detectCategory(name) {
   name = name.toLowerCase();
   const categories = {
@@ -181,12 +191,24 @@ function detectCategory(name) {
   return 'Sonstiges';
 }
 
-// 🗓️ Nächstes Update-Datum (Mo/Do)
+// NÄCHSTES UPDATE
 function getNextUpdateDate() {
   const now = new Date();
   const day = now.getDay();
   const offset = (day === 4) ? 4 : (day < 4 ? 4 - day : 8 - day);
-  const next = new Date(now.getTime() + offset * 24 * 60 * 60 * 1000);
+  const next = new Date(now.getTime() + offset * 86400000);
   next.setHours(6, 0, 0, 0);
   return next.toISOString();
+}
+
+// DATUM FÜR ALDI (Mo/Do)
+function getNextAldiDate() {
+  const now = new Date();
+  const day = now.getDay();
+  let offset;
+  if (day === 1 || day === 4) offset = 0;
+  else if (day < 1 || (day > 1 && day < 4)) offset = 4 - day;
+  else offset = 8 - day;
+  now.setDate(now.getDate() + offset);
+  return now.toLocaleDateString('de-CH').replace(/\./g, '-');
 }
