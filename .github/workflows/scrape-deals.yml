@@ -2,7 +2,7 @@ name: Scrape Supermarkt Angebote
 
 on:
   schedule:
-    - cron: '0 5 * * 1,4'
+    - cron: '0 5 * * 1,4'  # Mo & Do 6 Uhr Schweizer Zeit (UTC+1)
   workflow_dispatch:
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
       run: npm install
 
     - name: Scrape Angebote
-      run: node scraper.js
+      run: npm start
 
     - name: Commit und Push Änderungen
       run: |
