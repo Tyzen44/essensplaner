@@ -1,0 +1,37 @@
+# .github/workflows/scrape-deals.yml
+name: Scrape Supermarkt Angebote
+
+on:
+  schedule:
+    # Läuft jeden Montag und Donnerstag um 6 Uhr (Schweizer Zeit)
+    - cron: '0 5 * * 1,4'  # UTC Zeit (Schweiz ist UTC+1)
+  workflow_dispatch:  # Ermöglicht manuelles Starten
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install Dependencies
+      run: |
+        npm install puppeteer axios cheerio
+        
+    - name: Scrape Angebote
+      run: |
+        node scraper.js
+        
+    - name: Commit und Push Änderungen
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add deals.json
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update Angebote - $(date +'%Y-%m-%d %H:%M')"
+        git push
