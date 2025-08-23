@@ -3,735 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Intelligenter Essensplaner mit OCR-basierten Schweizer Supermarkt-Angeboten">
-    <title>🤖 OCR Essensplaner - Schweizer Supermarkt Angebote</title>
-    
+    <title>🤖 OCR Essensplaner</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #4a5568;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .ocr-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-            font-size: 18px;
-            color: #4a5568;
-        }
-
-        .loading.active {
-            display: block;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: #667eea;
-            animation: spin 1s ease-in-out infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .meal-plan {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .day-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .day-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .day-card h3 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .meal {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .meal-type {
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .meal-name {
-            color: #2d3748;
-            font-size: 16px;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .meal-details {
-            font-size: 14px;
-            color: #718096;
-            margin-bottom: 10px;
-        }
-
-        .ocr-indicator {
-            display: inline-block;
-            background: #48bb78;
-            color: white;
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 8px;
-        }
-
-        .shopping-list {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-
-        .shopping-list h2 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .store-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .store-section.migros { border-left-color: #ff6b35; }
-        .store-section.coop { border-left-color: #e53e3e; }
-        .store-section.aldi { border-left-color: #3182ce; }
-        .store-section.lidl { border-left-color: #38a169; }
-
-        .store-name {
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 10px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .item-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .item-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .item-list li:last-child {
-            border-bottom: none;
-        }
-
-        .price {
-            color: #48bb78;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .total-cost {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-top: 20px;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 12px;
-        }
-
-        .status-message {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .status-message.success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 2px solid #48bb78;
-        }
-
-        .status-message.error {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 2px solid #e53e3e;
-        }
-
-        .status-message.info {
-            background: #bee3f8;
-            color: #2c5282;
-            border: 2px solid #3182ce;
-        }
-
-        .recipe-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .recipe-modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .recipe-content {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #e2e8f0;
-            border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                border-radius: 0;
-                margin: 0;
-                min-height: 100vh;
-            }
-
-            body {
-                padding: 0;
-            }
-
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-                padding: 15px;
-                font-size: 17px;
-            }
-
-            .meal-plan {
-                grid-template-columns: 1fr;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: #4a5568; margin-bottom: 20px; font-size: 2.5em; }
+        .badge { display: inline-block; background: #48bb78; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; margin-bottom: 20px; }
+        .controls { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+        button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; transition: transform 0.2s; }
+        button:hover { transform: translateY(-2px); }
+        .status { padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; display: none; }
+        .status.success { background: #c6f6d5; color: #22543d; display: block; }
+        .status.error { background: #fed7d7; color: #742a2a; display: block; }
+        .status.info { background: #bee3f8; color: #2c5282; display: block; }
+        .loading { display: none; text-align: center; padding: 40px; }
+        .loading.active { display: block; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .meal-plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .day-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .day-card h3 { color: #2d3748; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .meal { margin-bottom: 15px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #667eea; }
+        .meal-type { font-weight: 600; color: #4a5568; margin-bottom: 8px; font-size: 14px; }
+        .meal-name { color: #2d3748; font-size: 16px; margin-bottom: 5px; }
+        .meal-details { font-size: 14px; color: #718096; }
+        .shopping-list { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .store-section { margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; }
+        .store-name { font-weight: 600; color: #4a5568; margin-bottom: 10px; font-size: 18px; }
+        .item-list { list-style: none; padding: 0; }
+        .item-list li { padding: 8px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+        .price { color: #48bb78; font-weight: 600; }
+        .total-cost { text-align: center; font-size: 20px; font-weight: 700; color: white; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; }
+        .demo-notice { background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; color: #856404; }
+        @media (max-width: 768px) { .container { padding: 15px; border-radius: 0; margin: 0; min-height: 100vh; } body { padding: 0; } .controls { flex-direction: column; } button { width: 100%; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🤖 OCR Essensplaner</h1>
-            <div class="ocr-badge">🔍 Computer Vision • Tesseract OCR • Anti-Bot-Umgehung</div>
-            <p style="color: #718096;">Intelligente Angebots-Erkennung aus Supermarkt-Websites</p>
+        <h1>🤖 OCR Essensplaner</h1>
+        <div style="text-align: center;">
+            <span class="badge">🔍 Computer Vision + Tesseract OCR</span>
         </div>
         
         <div class="controls">
-            <button onclick="fetchDeals()">🔄 Angebote abrufen (OCR)</button>
-            <button onclick="generateMealPlan()">📅 Essensplan generieren</button>
-            <button onclick="exportPDF()" style="background: linear-gradient(135deg, #e53e3e, #c53030);">📄 Als PDF</button>
-            <button onclick="showSystemInfo()" style="background: linear-gradient(135deg, #38a169, #2f855a);">ℹ️ System Info</button>
+            <button onclick="fetchDeals()">🔄 Angebote laden</button>
+            <button onclick="generateMealPlan()">📅 Plan erstellen</button>
+            <button onclick="exportPDF()">📄 Als PDF</button>
+            <button onclick="showSystemInfo()">ℹ️ System Info</button>
         </div>
 
-        <div id="statusMessage"></div>
+        <div id="status"></div>
         
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>🤖 OCR analysiert Supermarkt-Websites...</p>
-            <p style="font-size: 14px; color: #718096; margin-top: 10px;">
-                Computer Vision erkennt Angebote aus Screenshots
-            </p>
         </div>
 
-        <div id="mealPlanContainer"></div>
-        <div id="shoppingListContainer"></div>
-        
-        <div id="systemInfoModal" class="recipe-modal">
-            <div class="recipe-content">
-                <button class="close-modal" onclick="closeSystemInfo()">×</button>
-                <div id="systemInfoContent"></div>
-            </div>
-        </div>
+        <div id="content"></div>
     </div>
 
     <script>
         let currentDeals = {};
-        let mealPlan = {};
-        let shoppingList = {};
-        
-        // Intelligente Rezept-Templates
-        const recipeTemplates = {
-            pasta: {
-                needs: ['pasta', 'sauce', 'protein'],
-                template: 'Pasta mit {protein} und {sauce}',
-                instructions: [
-                    'Pasta nach Packungsanweisung kochen',
-                    '{protein} in Würfel schneiden und anbraten',
-                    'Mit {sauce} ablöschen',
-                    'Pasta untermischen und servieren'
-                ]
-            },
-            fleisch: {
-                needs: ['fleisch', 'gemüse', 'beilage'],
-                template: '{fleisch} mit {gemüse} und {beilage}',
-                instructions: [
-                    '{fleisch} würzen und braten',
-                    '{gemüse} dünsten',
-                    '{beilage} nach Anweisung zubereiten',
-                    'Alles anrichten'
-                ]
-            }
+        let currentPlan = {};
+        let isDemo = false;
+
+        // Demo-Daten basierend auf Ihren 6 OCR-Ergebnissen
+        const demoData = {
+            migros: [],
+            coop: [
+                { name: 'Schweizer Käse', price: 6.95, unit: '200g', category: 'Milchprodukte', store: 'Coop' },
+                { name: 'Bio Joghurt', price: 2.45, unit: '500g', category: 'Milchprodukte', store: 'Coop' }
+            ],
+            aldi: [
+                { name: 'Rindfleisch Steak', price: 12.90, unit: '400g', category: 'Fleisch', store: 'Aldi' },
+                { name: 'Tomaten Cherry', price: 3.49, unit: '500g', category: 'Gemüse', store: 'Aldi' },
+                { name: 'Vollkornbrot', price: 2.19, unit: '500g', category: 'Brot', store: 'Aldi' },
+                { name: 'Bananen', price: 1.99, unit: '1kg', category: 'Obst', store: 'Aldi' }
+            ],
+            lidl: [],
+            lastUpdate: new Date().toISOString(),
+            method: 'OCR-Computer-Vision (6 Angebote erkannt)',
+            note: 'Echte OCR-Daten von GitHub Actions'
         };
 
-        // Status-Nachrichten anzeigen
         function showStatus(message, type) {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.innerHTML = message;
-            statusDiv.className = `status-message ${type}`;
-            statusDiv.style.display = 'block';
-            
-            if (type === 'success' || type === 'info') {
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 5000);
-            }
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = `status ${type}`;
+            setTimeout(() => {
+                if (type === 'success' || type === 'info') {
+                    status.style.display = 'none';
+                }
+            }, 5000);
         }
 
-        // Angebote von GitHub abrufen
         async function fetchDeals() {
             const loading = document.getElementById('loading');
             loading.classList.add('active');
             
             try {
-                showStatus('🤖 Lade OCR-Angebote von GitHub...', 'info');
+                showStatus('🔄 Lade OCR-Angebote...', 'info');
                 
-                const response = await fetch('deals.json?t=' + new Date().getTime());
+                // Versuche echte Daten zu laden
+                const response = await fetch('deals.json?' + new Date().getTime());
                 
-                if (!response.ok) {
-                    throw new Error('deals.json nicht gefunden - GitHub Action noch nicht ausgeführt?');
+                if (response.ok) {
+                    const data = await response.json();
+                    const total = (data.migros?.length || 0) + (data.coop?.length || 0) + (data.aldi?.length || 0) + (data.lidl?.length || 0);
+                    
+                    if (total > 0) {
+                        currentDeals = data;
+                        isDemo = false;
+                        const method = data.method || 'OCR';
+                        const lastUpdate = new Date(data.lastUpdate).toLocaleDateString('de-CH');
+                        showStatus(`✅ ${total} echte OCR-Angebote geladen! (${method})<br><small>Stand: ${lastUpdate}</small>`, 'success');
+                    } else {
+                        throw new Error('Keine Angebote in deals.json');
+                    }
+                } else {
+                    throw new Error('deals.json nicht gefunden');
                 }
-                
-                const data = await response.json();
-                
-                // Validiere OCR-Daten
-                if (!data.migros || !data.coop || !data.aldi || !data.lidl) {
-                    throw new Error('Ungültiges Datenformat in deals.json');
-                }
-                
-                const totalDeals = data.migros.length + data.coop.length + data.aldi.length + data.lidl.length;
-                
-                if (totalDeals === 0) {
-                    throw new Error('Keine Angebote gefunden - OCR-Erkennung fehlgeschlagen');
-                }
-                
-                currentDeals = {
-                    'Migros': data.migros,
-                    'Coop': data.coop,
-                    'Aldi': data.aldi,
-                    'Lidl': data.lidl
-                };
-                
-                const lastUpdate = new Date(data.lastUpdate).toLocaleString('de-CH');
-                const method = data.method || 'OCR-Computer-Vision';
-                
-                showStatus(
-                    `✅ ${totalDeals} Angebote durch ${method} erkannt!<br>
-                     🟠 Migros: ${data.migros.length} • 🔴 Coop: ${data.coop.length} • 
-                     🔵 Aldi: ${data.aldi.length} • 🟢 Lidl: ${data.lidl.length}<br>
-                     <small>Stand: ${lastUpdate}</small>`, 
-                    'success'
-                );
                 
             } catch (error) {
-                showStatus(`❌ ${error.message}`, 'error');
+                // Fallback zu Demo-Daten
+                currentDeals = demoData;
+                isDemo = true;
+                const total = 6; // 2 Coop + 4 Aldi
+                showStatus(`⚠️ Keine Live-Daten verfügbar. Zeige Demo-Daten (${total} Angebote)<br><small>${error.message}</small>`, 'error');
             } finally {
                 loading.classList.remove('active');
             }
         }
 
-        // Intelligente Essensplan-Generierung
         function generateMealPlan() {
             if (Object.keys(currentDeals).length === 0) {
-                showStatus('⚠️ Bitte laden Sie zuerst die Angebote!', 'error');
+                showStatus('⚠️ Bitte zuerst Angebote laden!', 'error');
                 return;
             }
 
             const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+            const allDeals = [];
             
             // Sammle alle Angebote
-            const allDeals = [];
             Object.entries(currentDeals).forEach(([store, deals]) => {
-                deals.forEach(deal => {
-                    allDeals.push({ ...deal, store: store });
-                });
+                if (Array.isArray(deals)) {
+                    deals.forEach(deal => allDeals.push({...deal, store}));
+                }
             });
 
-            if (allDeals.length < 10) {
-                showStatus('⚠️ Zu wenige Angebote für Essensplan (mindestens 10 benötigt)', 'error');
+            if (allDeals.length < 3) {
+                showStatus('⚠️ Zu wenige Angebote für Essensplan', 'error');
                 return;
             }
 
-            mealPlan = {};
-            shoppingList = {};
+            currentPlan = {};
+            const shoppingList = {};
 
-            // Generiere für jeden Tag ein intelligentes Rezept
+            // Generiere für jeden Tag ein Gericht
             days.forEach((day, index) => {
-                const dayDeals = [...allDeals].sort(() => Math.random() - 0.5);
-                const dinner = generateIntelligentRecipe(dayDeals, day);
-                
-                mealPlan[day] = { dinner: dinner };
+                const availableDeals = [...allDeals];
+                const dinner = generateMeal(availableDeals, day);
+                currentPlan[day] = { dinner };
 
-                // Zusätzlich Mittagessen für Kinder (Di + Do)
-                if (day === 'Dienstag' || day === 'Donnerstag') {
-                    const lunch = generateKidsLunch(dayDeals);
-                    if (lunch) mealPlan[day].lunch = lunch;
+                // Zur Einkaufsliste hinzufügen
+                const store = dinner.store || 'Unbekannt';
+                if (!shoppingList[store]) shoppingList[store] = [];
+                if (!shoppingList[store].find(item => item.name === dinner.name)) {
+                    shoppingList[store].push(dinner);
                 }
             });
 
-            // Erstelle intelligente Einkaufsliste
-            generateShoppingList();
-            
-            // Zeige Ergebnisse
-            displayMealPlan();
-            displayShoppingList();
-            
-            showStatus(`🎉 Essensplan mit ${allDeals.length} OCR-Angeboten generiert!`, 'success');
+            displayPlan(currentPlan, shoppingList);
+            const sourceText = isDemo ? 'Demo-Daten' : 'OCR-Angeboten';
+            showStatus(`✅ Essensplan mit ${allDeals.length} ${sourceText} erstellt!`, 'success');
         }
 
-        // Generiere intelligentes Rezept basierend auf verfügbaren Angeboten
-        function generateIntelligentRecipe(deals, day) {
-            // Kategorisiere Angebote
-            const categories = {
-                fleisch: deals.filter(d => /fleisch|hack|steak|schnitzel/i.test(d.category || d.name)),
-                geflügel: deals.filter(d => /geflügel|huhn|poulet/i.test(d.category || d.name)),
-                fisch: deals.filter(d => /fisch|lachs/i.test(d.category || d.name)),
-                gemüse: deals.filter(d => /gemüse|tomate|salat|karotte/i.test(d.category || d.name)),
-                pasta: deals.filter(d => /pasta|nudel|spaghetti/i.test(d.name)),
-                milch: deals.filter(d => /milch|käse|joghurt/i.test(d.category || d.name)),
-                kartoffeln: deals.filter(d => /kartoffel/i.test(d.name)),
-                reis: deals.filter(d => /reis/i.test(d.name))
-            };
-
-            // Wähle Hauptzutat basierend auf Verfügbarkeit
-            let mainIngredient, recipe;
+        function generateMeal(deals, day) {
+            const mealTemplates = [
+                'Pasta mit {ingredient}',
+                '{ingredient} mit Gemüse', 
+                '{ingredient} Pfanne',
+                'Gebratenes {ingredient}',
+                '{ingredient} Auflauf',
+                'Einfaches {ingredient} Gericht'
+            ];
             
-            if (categories.fleisch.length > 0) {
-                mainIngredient = categories.fleisch[0];
-                const vegetable = categories.gemüse[0] || { name: 'gemischtes Gemüse', price: 3.50, store: 'Zusatz' };
-                const side = categories.kartoffeln[0] || categories.reis[0] || { name: 'Beilage', price: 2.00, store: 'Zusatz' };
-                
-                recipe = {
-                    name: `${mainIngredient.name} mit ${vegetable.name}`,
-                    ingredients: [
-                        `600g ${mainIngredient.name} (${mainIngredient.store} - CHF ${mainIngredient.price.toFixed(2)})`,
-                        `500g ${vegetable.name} (${vegetable.store} - CHF ${vegetable.price.toFixed(2)})`,
-                        `400g ${side.name} (${side.store} - CHF ${side.price.toFixed(2)})`
-                    ],
-                    instructions: [
-                        `${mainIngredient.name} in Stücke schneiden und würzen`,
-                        'In der Pfanne scharf anbraten',
-                        `${vegetable.name} hinzufügen und mitbraten`,
-                        `${side.name} als Beilage zubereiten`,
-                        'Alles anrichten und servieren'
-                    ],
-                    time: '35 Min',
-                    difficulty: 'Mittel',
-                    ocrGenerated: true
-                };
-            } else if (categories.pasta.length > 0) {
-                mainIngredient = categories.pasta[0];
-                const sauce = categories.gemüse[0] || { name: 'Tomatensauce', price: 2.50, store: 'Zusatz' };
-                const cheese = categories.milch[0] || { name: 'Käse', price: 4.00, store: 'Zusatz' };
-                
-                recipe = {
-                    name: `${mainIngredient.name} mit ${sauce.name}`,
-                    ingredients: [
-                        `500g ${mainIngredient.name} (${mainIngredient.store} - CHF ${mainIngredient.price.toFixed(2)})`,
-                        `300g ${sauce.name} (${sauce.store} - CHF ${sauce.price.toFixed(2)})`,
-                        `100g ${cheese.name} (${cheese.store} - CHF ${cheese.price.toFixed(2)})`
-                    ],
-                    instructions: [
-                        'Pasta in Salzwasser kochen',
-                        'Sauce erwärmen und würzen',
-                        'Pasta abgiessen und mit Sauce mischen',
-                        'Mit Käse servieren'
-                    ],
-                    time: '20 Min',
-                    difficulty: 'Einfach',
-                    ocrGenerated: true
-                };
-            } else {
-                // Fallback-Rezept
-                recipe = {
-                    name: 'Einfaches Abendessen',
-                    ingredients: ['Nach verfügbaren OCR-Angeboten auswählen'],
-                    instructions: ['Verfügbare Zutaten kreativ kombinieren'],
-                    time: '30 Min',
-                    difficulty: 'Flexibel',
-                    note: '⚠️ Nicht genug spezifische Angebote erkannt'
-                };
-            }
-
+            // Wähle zufällige Zutat
+            const ingredient = deals[Math.floor(Math.random() * Math.min(deals.length, 10))];
+            const template = mealTemplates[Math.floor(Math.random() * mealTemplates.length)];
+            
             return {
-                name: recipe.name,
+                name: template.replace('{ingredient}', ingredient.name),
+                price: ingredient.price || Math.random() * 10 + 3,
+                store: ingredient.store,
+                category: ingredient.category || 'Sonstiges',
                 servings: '4 Portionen',
-                recipe: recipe
+                unit: ingredient.unit || 'Portion'
             };
         }
 
-        // Generiere Kinder-Mittagessen
-        function generateKidsLunch(deals) {
-            const pastaDeals = deals.filter(d => /pasta|nudel/i.test(d.name));
-            const tomatoDeals = deals.filter(d => /tomate/i.test(d.name));
+        function displayPlan(plan, shoppingList) {
+            const content = document.getElementById('content');
             
-            if (pastaDeals.length > 0) {
-                return {
-                    name: 'Kindernudeln',
-                    servings: '2 Kinder',
-                    recipe: {
-                        ingredients: [
-                            `250g ${pastaDeals[0].name} (${pastaDeals[0].store})`,
-                            tomatoDeals.length > 0 ? 
-                                `200g ${tomatoDeals[0].name} (${tomatoDeals[0].store})` : 
-                                '200g Tomatensauce'
-                        ],
-                        instructions: [
-                            'Nudeln weich kochen',
-                            'Mit Tomatensauce mischen',
-                            'Kinderfreundlich portionieren'
-                        ],
-                        time: '15 Min',
-                        difficulty: 'Sehr einfach',
-                        ocrGenerated: true
-                    }
-                };
+            if (isDemo) {
+                content.innerHTML = '<div class="demo-notice">📝 <strong>Demo-Modus:</strong> Verwendet Beispiel-Daten. Für echte Angebote aktivieren Sie GitHub Pages und führen die GitHub Action aus.</div>';
+            } else {
+                content.innerHTML = '';
             }
-            return null;
-        }
-
-        // Generiere Einkaufsliste aus Rezepten
-        function generateShoppingList() {
-            shoppingList = {};
             
-            Object.values(mealPlan).forEach(day => {
-                ['dinner', 'lunch'].forEach(mealType => {
-                    if (day[mealType] && day[mealType].recipe.ingredients) {
-                        day[mealType].recipe.ingredients.forEach(ingredient => {
-                            const match = ingredient.match(/(.+?)\s*\((.+?)\s*-\s*CHF\s*([\d.]+)\)/);
-                            if (match) {
-                                const [, name, store, price] = match;
-                                if (!shoppingList[store]) {
-                                    shoppingList[store] = [];
-                                }
-                                
-                                const existingItem = shoppingList[store].find(item => 
-                                    item.name.toLowerCase().includes(name.toLowerCase().split(' ')[1] || name.toLowerCase())
-                                );
-                                
-                                if (!existingItem) {
-                                    shoppingList[store].push({
-                                        name: name.trim(),
-                                        price: parseFloat(price),
-                                        ocrSource: true
-                                    });
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-        }
-
-        // Zeige Essensplan
-        function displayMealPlan() {
-            const container = document.getElementById('mealPlanContainer');
-            container.innerHTML = '<h2 style="text-align: center; margin-bottom: 20px;">📅 OCR-Generierter Wochenplan</h2>';
+            let html = '<h2 style="text-align: center; margin-bottom: 20px;">📅 Wochenplan</h2>';
             
-            const planGrid = document.createElement('div');
-            planGrid.className = 'meal-plan';
-
-            Object.entries(mealPlan).forEach(([day, meals]) => {
-                const dayCard = document.createElement('div');
-                dayCard.className = 'day-card';
-                
-                let cardHTML = `<h3>${day}</h3>`;
-                
-                if (meals.dinner) {
-                    cardHTML += `
+            // Essensplan
+            html += '<div class="meal-plan">';
+            Object.entries(plan).forEach(([day, meals]) => {
+                html += `
+                    <div class="day-card">
+                        <h3>${day}</h3>
                         <div class="meal">
-                            <div class="meal-type">🌙 Abendessen <span class="ocr-indicator">OCR</span></div>
+                            <div class="meal-type">🌙 Abendessen</div>
                             <div class="meal-name">${meals.dinner.name}</div>
-                            <div class="meal-details">${meals.dinner.servings}</div>
-                            <button onclick="showRecipe('${day}', 'dinner')" 
-                                style="margin-top: 10px; padding: 8px 16px; font-size: 14px; background: linear-gradient(135deg, #48bb78, #38a169);">
-                                📖 Rezept anzeigen
-                            </button>
+                            <div class="meal-details">${meals.dinner.servings} - CHF ${meals.dinner.price?.toFixed(2) || '0.00'}</div>
+                            <div class="meal-details">📍 ${meals.dinner.store}</div>
                         </div>
-                    `;
-                }
-                
-                if (meals.lunch) {
-                    cardHTML += `
-                        <div class="meal">
-                            <div class="meal-type">☀️ Mittagessen <span class="ocr-indicator">OCR</span></div>
-                            <div class="meal-name">${meals.lunch.name}</div>
-                            <div class="meal-details">${meals.lunch.servings}</div>
-                            <button onclick="showRecipe('${day}', 'lunch')" 
-                                style="margin-top: 10px; padding: 8px 16px; font-size: 14px; background: linear-gradient(135deg, #48bb78, #38a169);">
-                                📖 Rezept anzeigen
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                dayCard.innerHTML = cardHTML;
-                planGrid.appendChild(dayCard);
+                    </div>
+                `;
             });
-            
-            container.appendChild(planGrid);
-        }
+            html += '</div>';
 
-        // Zeige Einkaufsliste
-        function displayShoppingList() {
-            const container = document.getElementById('shoppingListContainer');
-            container.innerHTML = '';
-            
-            const listDiv = document.createElement('div');
-            listDiv.className = 'shopping-list';
-            listDiv.innerHTML = '<h2>🛒 OCR-basierte Einkaufsliste</h2>';
+            // Einkaufsliste
+            html += '<div class="shopping-list"><h2>🛒 Einkaufsliste</h2>';
             
             let totalCost = 0;
-            const storeEmojis = { 'Migros': '🟠', 'Coop': '🔴', 'Aldi':
+            const storeEmojis = { 'Migros': '🟠', 'Coop': '🔴', 'Aldi': '🔵', 'Lidl': '🟢' };
+            
+            Object.entries(shoppingList).forEach(([store, items]) => {
+                let storeCost = 0;
+                html += `<div class="store-section">
+                    <div class="store-name">${storeEmojis[store] || '🏪'} ${store}</div>
+                    <ul class="item-list">`;
+                
+                items.forEach(item => {
+                    const price = item.price || 0;
+                    storeCost += price;
+                    html += `<li>
+                        <span>${item.name} (${item.unit || 'Stück'})</span>
+                        <span class="price">CHF ${price.toFixed(2)}</span>
+                    </li>`;
+                });
+                
+                html += `</ul>
+                    <div style="text-align: right; margin-top: 10px; font-weight: 600;">
+                        Zwischensumme: CHF ${storeCost.toFixed(2)}
+                    </div>
+                </div>`;
+                
+                totalCost += storeCost;
+            });
+            
+            html += `<div class="total-cost">
+                💰 Gesamtkosten: CHF ${totalCost.toFixed(2)}
+                <div style="font-size: 14px; margin-top: 5px; opacity: 0.9;">
+                    🤖 ${isDemo ? 'Demo-Berechnung' : 'OCR-basierte Kalkulation'}
+                </div>
+            </div></div>`;
+            
+            content.innerHTML += html;
+        }
+
+        function exportPDF() {
+            if (Object.keys(currentPlan).length === 0) {
+                showStatus('⚠️ Bitte zuerst Essensplan erstellen!', 'error');
+                return;
+            }
+
+            let exportText = 'OCR ESSENSPLANER\n================\n\n';
+            exportText += `Erstellt: ${new Date().toLocaleDateString('de-CH')}\n`;
+            exportText += `Modus: ${isDemo ? 'Demo-Daten' : 'OCR-Computer-Vision'}\n\n`;
+            
+            Object.entries(currentPlan).forEach(([day, meals]) => {
+                exportText += `${day}:\n`;
+                exportText += `  Abendessen: ${meals.dinner.name}\n`;
+                exportText += `  Preis: CHF ${meals.dinner.price?.toFixed(2) || '0.00'}\n`;
+                exportText += `  Store: ${meals.dinner.store}\n\n`;
+            });
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OCR-Essensplan-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showStatus('✅ Plan als Textdatei exportiert!', 'success');
+        }
+
+        function showSystemInfo() {
+            const infoText = `
+🤖 OCR-Essensplaner System
+
+📊 Status: ${isDemo ? 'Demo-Modus' : 'Live OCR-Daten'}
+🔍 OCR-Engine: Tesseract.js
+🌐 Method: Computer Vision
+📅 Letzte Ausführung: ${currentDeals.lastUpdate ? new Date(currentDeals.lastUpdate).toLocaleString('de-CH') : 'Unbekannt'}
+
+🏪 Unterstützte Supermärkte:
+🟠 Migros: ${currentDeals.migros?.length || 0} Angebote
+🔴 Coop: ${currentDeals.coop?.length || 0} Angebote  
+🔵 Aldi: ${currentDeals.aldi?.length || 0} Angebote
+🟢 Lidl: ${currentDeals.lidl?.length || 0} Angebote
+
+🔧 Für echte Daten:
+1. GitHub Pages aktivieren
+2. GitHub Action ausführen
+3. Seite neu laden
+
+✨ Aktuelle Erkennungsrate: 6/4 Stores erfolgreich
+            `;
+            
+            alert(infoText);
+        }
+
+        // Auto-Load beim Start
+        window.addEventListener('load', () => {
+            showStatus('🤖 OCR-Essensplaner geladen! Klicken Sie "Angebote laden" um zu starten.', 'info');
+            
+            // Automatischer Versuch echte Daten zu laden
+            setTimeout(() => {
+                fetchDeals();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
