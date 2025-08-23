@@ -3,6 +3,8 @@
   "coop": [],
   "aldi": [],
   "lidl": [],
-  "lastUpdate": "2025-08-05T20:45:12.431Z",
-  "nextUpdate": "2025-08-07T06:00:00.000Z"
+  "lastUpdate": null,
+  "method": "OCR-Computer-Vision",
+  "ocrEngine": "Tesseract.js",
+  "note": "Diese Datei wird automatisch durch die GitHub Action mit OCR-erkannten Angeboten gefüllt"
 }
