@@ -2,21 +2,10 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Essensplaner">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#667eea">
-    <meta name="description" content="Wöchentlicher Essensplaner mit Schweizer Supermarkt-Angeboten">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Intelligenter Essensplaner mit OCR-basierten Schweizer Supermarkt-Angeboten">
+    <title>🤖 OCR Essensplaner - Schweizer Supermarkt Angebote</title>
     
-    <!-- App Icons für iOS -->
-    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAMAUExURQAAAGZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6v///2Z+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6mZ+6v///wAAAAEBAQICAgMDAwQEBAUFBQYGBgcHBwgICAkJCQoKCgsLCwwMDA0NDQ4ODg8PDxAQEBERERISEhMTExQUFBUVFRYWFhcXFxgYGBkZGRoaGhsbGxwcHB0dHR4eHh8fHyAgICEhISIiIiMjIyQkJCUlJSYmJicnJygoKCkpKSoqKisrKywsLC0tLS4uLi8vLzAwMDExMTIyMjMzMzQ0NDU1NTY2Njc3Nzg4ODk5OTo6Ojs7Ozw8PD09PT4+Pj8/P0BAQEFBQUJCQkNDQ0REREVFRUZGRkdHR0hISElJSUpKSktLS0xMTE1NTU5OTk9PT1BQUFFRUVJSUlNTU1RUVFVVVVZWVldXV1hYWFlZWVpaWltbW1xcXF1dXV5eXl9fX2BgYGFhYWJiYmNjY2RkZGVlZWZmZmdnZ2hoaGlpaWpqamtra2xsbG1tbW5ubm9vb3BwcHFxcXJycnNzc3R0dHV1dXZ2dnd3d3h4eHl5eXp6ent7e3x8fH19fX5+fn9/f4CAgIGBgYKCgoODg4SEhIWFhYaGhoeHh4iIiImJiYqKiouLi4yMjI2NjY6Ojo+Pj5CQkJGRkZKSkpOTk5SUlJWVlZaWlpeXl5iYmJmZmZqampubm5ycnJ2dnZ6enp+fn6CgoKGhoaKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq6ysrK2tra6urq+vr7CwsLGxsbKysrOzs7S0tLW1tba2tre3t7i4uLm5ubq6uru7u7y8vL29vb6+vr+/v8DAwMHBwcLCwsPDw8TExMXFxcbGxsfHx2Z+6nSKn6IAAAA6dFJOUwD+/QH8+wL6+QP49wT39gX19AYH8/L7CPHJ7+0JCu7qCwzr5gwO4g0P698Q3RER3NvT2djX1tXU09LMJ1mgAAACY0lEQVR42u3dVXPbQBSG4aMkMjNzUmZmZmZmZmZmZmZmZmZmZmZmZmb2VpPpNBPHu5JOV5LfmV7Y8sw7sLtrrf8lEolEIpFIJBKJRCKRSCQSiUQikUgkEolEouzSqVOnzp07d+7SpUu3bt26d+/eo0ePnj179uzVq1fv3r379+8/YMCAgQMHDho0aPDgwUOGDBk6dOiwYcOGDx8+YsSIkSNHjho1avTo0WPGjBk7duy4cePGjx8/YcKEiRMnTpo0afLkyVOmTJk6der06dNnzJgxc+bMWbNmzZ49e86cOXPnzp03b978+fMXLFiwcOHCRYsWLV68eMmSJUuXLl22bNny5ctXrFixcuXKVatWrV69es2aNWvXrl23bt369es3bNiwcePGTZs2bd68ecuWLVu3bt22bdv27dt37Nixc+fOXbt27d69e8+ePXv37t23b9/+/fsPHDhw8ODBI0eOHDt27Pjx4ydPnjx16tTp06fPnDlz9uzZc+fOnT9//sKFCxcvXrx06dLly5evXLly9erVa9euXb9+/caNG7du3bp9+/adO3fu3r17//79Bw8ePHr06PHjx0+ePHn69Omr16/fvHnz9u3bd+/effjw4ePHj58+ffr8+fOXL1++fv36999/WSwWq9Vqs9nsdrsgCG63WxRFj8fj9Xp9Pp/f7w8EAsFgMBQKhcPhSCQSjUZjsVg8Hk8kEslkMpVKpdPpTCaTzWZzuVw+ny8UCsVisVKpVKvVWq1Wr9cbwH9oNBqJRCKRSCQSiUQikUgkEolEos+hA7LwVOjwOvG9AAAAAElFTkSuQmCC">
-    
-    <!-- Manifest für PWA -->
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiV8O2Y2hlbnRsaWNoZXIgRXNzZW5zcGxhbmVyIiwic2hvcnRfbmFtZSI6IkVzc2Vuc3BsYW5lciIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwic3RhcnRfdXJsIjoiLiIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjNjY3ZWVhIiwib3JpZW50YXRpb24iOiJwb3J0cmFpdCJ9">
-    
-    <title>Wöchentlicher Essensplaner</title>
     <style>
         * {
             margin: 0;
@@ -29,6 +18,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            color: #333;
         }
 
         .container {
@@ -40,16 +30,31 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
-        h1 {
+        .header {
             text-align: center;
-            color: #4a5568;
             margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4a5568;
             font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .ocr-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
         }
 
         .controls {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 30px;
             flex-wrap: wrap;
             justify-content: center;
@@ -64,12 +69,13 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         button:active {
@@ -105,7 +111,7 @@
 
         .meal-plan {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -115,7 +121,7 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.3s ease;
         }
 
         .day-card:hover {
@@ -132,26 +138,40 @@
 
         .meal {
             margin-bottom: 15px;
-            padding: 10px;
-            background: #f7fafc;
+            padding: 15px;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
             border-radius: 8px;
+            border-left: 4px solid #667eea;
         }
 
         .meal-type {
             font-weight: 600;
             color: #4a5568;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
 
         .meal-name {
             color: #2d3748;
             font-size: 16px;
             margin-bottom: 5px;
+            font-weight: 500;
         }
 
         .meal-details {
             font-size: 14px;
             color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .ocr-indicator {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
         }
 
         .shopping-list {
@@ -172,24 +192,33 @@
         .store-section {
             margin-bottom: 20px;
             padding: 15px;
-            background: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
             border-radius: 8px;
+            border-left: 4px solid;
         }
+
+        .store-section.migros { border-left-color: #ff6b35; }
+        .store-section.coop { border-left-color: #e53e3e; }
+        .store-section.aldi { border-left-color: #3182ce; }
+        .store-section.lidl { border-left-color: #38a169; }
 
         .store-name {
             font-weight: 600;
             color: #4a5568;
             margin-bottom: 10px;
             font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .item-list {
             list-style: none;
-            padding-left: 0;
+            padding: 0;
         }
 
         .item-list li {
-            padding: 5px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
@@ -203,16 +232,45 @@
         .price {
             color: #48bb78;
             font-weight: 600;
+            font-size: 16px;
         }
 
         .total-cost {
-            text-align: right;
-            font-size: 20px;
-            font-weight: 600;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
             color: #2d3748;
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e2e8f0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status-message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .status-message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #e53e3e;
+        }
+
+        .status-message.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 2px solid #3182ce;
         }
 
         .recipe-modal {
@@ -231,6 +289,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         .recipe-content {
@@ -238,8 +297,8 @@
             border-radius: 12px;
             padding: 30px;
             max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
+            width: 100%;
+            max-height: 80vh;
             overflow-y: auto;
             position: relative;
         }
@@ -250,245 +309,21 @@
             right: 15px;
             background: #e2e8f0;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .recipe-content h3 {
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
-
-        .recipe-content h4 {
-            color: #4a5568;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
-        .recipe-content ul, .recipe-content ol {
-            padding-left: 20px;
-            line-height: 1.8;
-        }
-
-        .error-message {
-            display: none;
-            background: #fed7d7;
-            color: #742a2a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .error-message.active {
-            display: block;
-        }
-
-        .preferences-panel {
-            display: none;
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            animation: slideDown 0.3s ease-out;
-        }
-
-        .preferences-panel.active {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .preferences-panel h3 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .preference-section {
-            margin-bottom: 25px;
-        }
-
-        .preference-section h4 {
-            color: #4a5568;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .category-filters, .cuisine-preferences {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            background: #f7fafc;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .checkbox-label:hover {
-            background: #edf2f7;
-        }
-
-        .checkbox-label input {
-            margin-right: 8px;
-            cursor: pointer;
-        }
-
-        .checkbox-label span {
-            font-size: 14px;
-            color: #2d3748;
-        }
-
-        .exclusion-list {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .exclusion-list input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .exclusion-list input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .excluded-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .excluded-item {
-            background: #fed7d7;
-            color: #742a2a;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .excluded-item button {
-            background: none;
-            border: none;
-            color: #742a2a;
-            cursor: pointer;
-            padding: 0;
-            margin: 0;
-            font-size: 18px;
-            line-height: 1;
-        }
-
-        .preference-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .personal-settings {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 10px;
-        }
-
-        .favorites-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .favorite-meal {
-            background: #f0f9ff;
-            border: 2px solid #3182ce;
-            color: #2c5282;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .favorite-meal:hover {
-            background: #3182ce;
-            color: white;
-            transform: scale(1.05);
-        }
-
-        .meal-rating {
-            display: inline-flex;
-            gap: 3px;
-            margin-left: 10px;
-            cursor: pointer;
-        }
-
-        .meal-rating span {
-            font-size: 16px;
-            opacity: 0.3;
-            transition: opacity 0.2s;
-        }
-
-        .meal-rating span:hover,
-        .meal-rating span.active {
-            opacity: 1;
-        }
-
-        .quick-actions {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 100;
-        }
-
-        .quick-actions button {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 20px;
-            padding: 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
                 border-radius: 0;
+                margin: 0;
                 min-height: 100vh;
             }
 
@@ -496,13 +331,12 @@
                 padding: 0;
             }
 
-            h1 {
+            .header h1 {
                 font-size: 1.8em;
             }
 
             .controls {
                 flex-direction: column;
-                align-items: stretch;
             }
 
             button {
@@ -514,551 +348,105 @@
             .meal-plan {
                 grid-template-columns: 1fr;
             }
-
-            .preferences-panel {
-                border-radius: 0;
-                margin: 0 -15px;
-                padding: 20px 15px;
-            }
-
-            .category-filters, .cuisine-preferences {
-                grid-template-columns: 1fr;
-            }
-
-            .recipe-content {
-                width: 95%;
-                margin: 20px auto;
-            }
-        }
-
-        /* iOS-spezifische Anpassungen */
-        @supports (-webkit-touch-callout: none) {
-            .container {
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-            
-            button {
-                -webkit-tap-highlight-color: transparent;
-            }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🍽️ Wöchentlicher Essensplaner</h1>
+        <div class="header">
+            <h1>🤖 OCR Essensplaner</h1>
+            <div class="ocr-badge">🔍 Computer Vision • Tesseract OCR • Anti-Bot-Umgehung</div>
+            <p style="color: #718096;">Intelligente Angebots-Erkennung aus Supermarkt-Websites</p>
+        </div>
         
         <div class="controls">
-            <button onclick="fetchDeals()">🔄 Aktuelle Angebote abrufen</button>
+            <button onclick="fetchDeals()">🔄 Angebote abrufen (OCR)</button>
             <button onclick="generateMealPlan()">📅 Essensplan generieren</button>
-            <button onclick="togglePreferences()">⚙️ Präferenzen</button>
-            <button onclick="exportPDF()" style="background: #e53e3e;">📄 Als PDF speichern</button>
-            <button onclick="exportPlan()">📝 Als Text exportieren</button>
+            <button onclick="exportPDF()" style="background: linear-gradient(135deg, #e53e3e, #c53030);">📄 Als PDF</button>
+            <button onclick="showSystemInfo()" style="background: linear-gradient(135deg, #38a169, #2f855a);">ℹ️ System Info</button>
         </div>
 
-        <div class="preferences-panel" id="preferencesPanel">
-            <h3>🍽️ Ihre Präferenzen</h3>
-            
-            <div class="preference-section">
-                <h4>Kategorien ausschließen:</h4>
-                <div class="category-filters">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="excludeFish" onchange="savePreferences()">
-                        <span>🐟 Kein Fisch</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="excludeMeat" onchange="savePreferences()">
-                        <span>🥩 Kein Fleisch</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="excludePoultry" onchange="savePreferences()">
-                        <span>🍗 Kein Geflügel</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="excludeDairy" onchange="savePreferences()">
-                        <span>🥛 Keine Milchprodukte</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="excludeGluten" onchange="savePreferences()">
-                        <span>🌾 Glutenfrei</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="vegetarian" onchange="toggleVegetarian()">
-                        <span>🥗 Vegetarisch</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="preference-section">
-                <h4>Spezifische Lebensmittel ausschließen:</h4>
-                <div class="exclusion-list">
-                    <input type="text" id="excludeInput" placeholder="z.B. Brokkoli, Zwiebeln...">
-                    <button onclick="addExclusion()">➕ Hinzufügen</button>
-                </div>
-                <div id="excludedItems" class="excluded-items"></div>
-            </div>
-
-            <div class="preference-section">
-                <h4>Praktische Einstellungen:</h4>
-                <div class="personal-settings">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="preferQuick" onchange="savePreferences()">
-                        <span>⏱️ Bevorzuge schnelle Gerichte (&lt;30 Min)</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="extraPortions" onchange="savePreferences()">
-                        <span>🍱 Extra Portionen (für morgen mitnehmen)</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="budgetMode" onchange="savePreferences()">
-                        <span>💰 Budget-Modus (günstigste Optionen)</span>
-                    </label>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="simpleRecipes" onchange="savePreferences()">
-                        <span>👶 Einfache Rezepte (wenige Zutaten)</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="preference-actions">
-                <button onclick="resetPreferences()">🔄 Zurücksetzen</button>
-                <button onclick="togglePreferences()" style="background: #48bb78;">✓ Fertig</button>
-            </div>
-        </div>
-
-        <div class="error-message" id="errorMessage"></div>
+        <div id="statusMessage"></div>
         
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Suche nach aktuellen Angeboten...</p>
+            <p>🤖 OCR analysiert Supermarkt-Websites...</p>
+            <p style="font-size: 14px; color: #718096; margin-top: 10px;">
+                Computer Vision erkennt Angebote aus Screenshots
+            </p>
         </div>
 
         <div id="mealPlanContainer"></div>
         <div id="shoppingListContainer"></div>
-    </div>
-
-    <div class="recipe-modal" id="recipeModal">
-        <div class="recipe-content">
-            <button class="close-modal" onclick="closeRecipeModal()">×</button>
-            <div id="recipeDetails"></div>
+        
+        <div id="systemInfoModal" class="recipe-modal">
+            <div class="recipe-content">
+                <button class="close-modal" onclick="closeSystemInfo()">×</button>
+                <div id="systemInfoContent"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Service Worker Registration für Offline-Funktionalität
-        if ('serviceWorker' in navigator) {
-            // Erstelle Service Worker als Blob
-            const swCode = `
-                self.addEventListener('install', e => {
-                    e.waitUntil(
-                        caches.open('essensplaner-v1').then(cache => {
-                            return cache.addAll(['/']);
-                        })
-                    );
-                });
-
-                self.addEventListener('fetch', e => {
-                    e.respondWith(
-                        caches.match(e.request).then(response => {
-                            return response || fetch(e.request);
-                        })
-                    );
-                });
-            `;
-            
-            // Registriere Service Worker nur wenn online gehostet
-            if (window.location.protocol === 'https:' || window.location.hostname === 'localhost') {
-                // Service Worker würde hier registriert werden
-                console.log('PWA-Modus verfügbar');
-            }
-        }
         let currentDeals = {};
         let mealPlan = {};
         let shoppingList = {};
-        let userPreferences = {
-            excludeCategories: [],
-            excludeItems: [],
-            preferQuick: false,
-            extraPortions: false,
-            budgetMode: false,
-            simpleRecipes: false
-        };
-
-        // Lade gespeicherte Präferenzen beim Start
-        window.addEventListener('load', function() {
-            loadPreferences();
-            checkSystemStatus();
-        });
-
-        // System Status Check
-        async function checkSystemStatus() {
-            try {
-                const response = await fetch('deals.json?t=' + new Date().getTime());
-                if (!response.ok) {
-                    showSetupInstructions();
-                } else {
-                    const data = await response.json();
-                    if (!data.lastUpdate || Object.values(data).filter(Array.isArray).every(arr => arr.length === 0)) {
-                        showNotification('⚠️ Keine Angebote vorhanden. Bitte führen Sie die GitHub Action aus!', 'warning');
-                    } else {
-                        showNotification('✅ System bereit! Klicken Sie "Aktuelle Angebote abrufen"', 'success');
-                    }
-                }
-            } catch (error) {
-                showSetupInstructions();
-            }
-        }
-
-        // Zeige Setup-Anleitung
-        function showSetupInstructions() {
-            const container = document.getElementById('mealPlanContainer');
-            container.innerHTML = `
-                <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; padding: 30px; margin: 20px 0;">
-                    <h2 style="color: #856404; margin-bottom: 20px;">⚠️ GitHub Actions Setup erforderlich</h2>
-                    <p style="color: #856404; margin-bottom: 20px;">Die App ist noch nicht vollständig eingerichtet. Bitte folgen Sie diesen Schritten:</p>
-                    
-                    <ol style="color: #856404; line-height: 2;">
-                        <li><strong>Erstellen Sie scraper.js:</strong>
-                            <ul>
-                                <li>Gehen Sie zu Ihrem Repository</li>
-                                <li>Create new file → "scraper.js"</li>
-                                <li>Kopieren Sie den Scraper-Code</li>
-                            </ul>
-                        </li>
-                        <li><strong>Erstellen Sie deals.json:</strong>
-                            <ul>
-                                <li>Create new file → "deals.json"</li>
-                                <li>Inhalt: <code>{"migros":[],"coop":[],"aldi":[],"lidl":[],"lastUpdate":null}</code></li>
-                            </ul>
-                        </li>
-                        <li><strong>Erstellen Sie .github/workflows/scrape-deals.yml:</strong>
-                            <ul>
-                                <li>Create new file → ".github/workflows/scrape-deals.yml"</li>
-                                <li>Kopieren Sie den GitHub Actions Code</li>
-                            </ul>
-                        </li>
-                        <li><strong>Aktivieren Sie GitHub Actions:</strong>
-                            <ul>
-                                <li>Gehen Sie zum "Actions" Tab</li>
-                                <li>Aktivieren Sie Workflows</li>
-                                <li>Führen Sie "Scrape Supermarkt Angebote" aus</li>
-                            </ul>
-                        </li>
-                    </ol>
-                    
-                    <p style="color: #856404; margin-top: 20px;">
-                        Nach 5 Minuten laden Sie diese Seite neu. Die App funktioniert dann mit echten Angeboten!
-                    </p>
-                </div>
-            `;
-        }
-        const simulatedDeals = {
-            'Migros': [
-                { name: 'Hackfleisch gemischt', price: 7.90, unit: '500g', category: 'Fleisch' },
-                { name: 'Pouletbrust', price: 9.50, unit: '400g', category: 'Fleisch' },
-                { name: 'Tomaten', price: 2.50, unit: '1kg', category: 'Gemüse' },
-                { name: 'Teigwaren', price: 1.95, unit: '500g', category: 'Grundnahrung' },
-                { name: 'Reis', price: 2.40, unit: '1kg', category: 'Grundnahrung' },
-                { name: 'Zwiebeln', price: 1.80, unit: '1kg', category: 'Gemüse' }
-            ],
-            'Coop': [
-                { name: 'Lachs', price: 8.95, unit: '200g', category: 'Fisch' },
-                { name: 'Kartoffeln', price: 2.95, unit: '2.5kg', category: 'Gemüse' },
-                { name: 'Karotten', price: 1.95, unit: '1kg', category: 'Gemüse' },
-                { name: 'Milch', price: 1.65, unit: '1L', category: 'Milchprodukte' },
-                { name: 'Käse', price: 4.50, unit: '200g', category: 'Milchprodukte' }
-            ],
-            'Aldi': [
-                { name: 'Schweineschnitzel', price: 6.99, unit: '400g', category: 'Fleisch' },
-                { name: 'Broccoli', price: 2.49, unit: '500g', category: 'Gemüse' },
-                { name: 'Eier', price: 3.79, unit: '10 Stück', category: 'Eier' },
-                { name: 'Brot', price: 1.99, unit: '500g', category: 'Brot' },
-                { name: 'Butter', price: 2.99, unit: '250g', category: 'Milchprodukte' }
-            ],
-            'Lidl': [
-                { name: 'Pizza Margherita', price: 2.99, unit: '1 Stück', category: 'Fertiggerichte' },
-                { name: 'Spinat TK', price: 1.49, unit: '450g', category: 'TK-Gemüse' },
-                { name: 'Joghurt', price: 0.89, unit: '500g', category: 'Milchprodukte' },
-                { name: 'Äpfel', price: 2.99, unit: '1kg', category: 'Obst' },
-                { name: 'Bananen', price: 1.99, unit: '1kg', category: 'Obst' }
-            ]
-        };
-
-        // Erweiterte Rezept-Templates mit flexiblen Zutaten
+        
+        // Intelligente Rezept-Templates
         const recipeTemplates = {
-            'Pasta-Gerichte': {
-                baseRecipe: {
-                    time: '25 Min',
-                    difficulty: 'Einfach',
-                    baseInstructions: [
-                        'Wasser aufkochen und Pasta hinzugeben',
-                        'Sauce-Zutaten vorbereiten',
-                        'Sauce zubereiten während Pasta kocht',
-                        'Abgiessen und vermischen'
-                    ]
-                },
-                variations: [
-                    {
-                        name: 'Pasta mit {FLEISCH} und {GEMÜSE}',
-                        needs: ['pasta', 'fleisch', 'gemüse'],
-                        template: [
-                            '{FLEISCH} in Würfel schneiden und anbraten',
-                            '{GEMÜSE} hinzufügen und mitbraten',
-                            'Mit Tomatensauce oder Rahm ablöschen',
-                            'Pasta unterrühren und servieren'
-                        ]
-                    },
-                    {
-                        name: 'Vegetarische Pasta mit {GEMÜSE1} und {GEMÜSE2}',
-                        needs: ['pasta', 'gemüse', 'gemüse'],
-                        template: [
-                            '{GEMÜSE1} und {GEMÜSE2} in Olivenöl anbraten',
-                            'Knoblauch hinzufügen',
-                            'Mit Weisswein ablöschen',
-                            'Pasta untermischen, Käse darüber'
-                        ]
-                    }
-                ]
-            },
-            'Fleisch-Hauptgang': {
-                baseRecipe: {
-                    time: '35 Min',
-                    difficulty: 'Mittel'
-                },
-                variations: [
-                    {
-                        name: '{FLEISCH} mit {BEILAGE} und {GEMÜSE}',
-                        needs: ['fleisch', 'beilage', 'gemüse'],
-                        template: [
-                            '{FLEISCH} würzen und in der Pfanne braten',
-                            '{BEILAGE} nach Anleitung zubereiten',
-                            '{GEMÜSE} dämpfen oder braten',
-                            'Alles anrichten und servieren'
-                        ]
-                    }
-                ]
-            },
-            'Eintopf/Curry': {
-                baseRecipe: {
-                    time: '40 Min',
-                    difficulty: 'Einfach'
-                },
-                variations: [
-                    {
-                        name: '{PROTEIN}-Curry mit {GEMÜSE}',
-                        needs: ['protein', 'gemüse', 'reis'],
-                        template: [
-                            'Zwiebeln und Currypaste anbraten',
-                            '{PROTEIN} hinzufügen und anbraten',
-                            '{GEMÜSE} und Kokosmilch dazugeben',
-                            '20 Min köcheln lassen',
-                            'Mit Reis servieren'
-                        ]
-                    }
-                ]
-            }
-        };
-
-        // Intelligente Rezept-Generierung basierend auf Angeboten
-        function generateRecipeFromDeals(availableDeals, dayName) {
-            // Kategorisiere verfügbare Angebote
-            const categorizedDeals = {
-                pasta: [],
-                fleisch: [],
-                fisch: [],
-                gemüse: [],
-                milchprodukte: [],
-                beilage: [],
-                protein: []
-            };
-
-            availableDeals.forEach(deal => {
-                const name = deal.name.toLowerCase();
-                const category = deal.category?.toLowerCase() || '';
-                
-                // Kategorisierung
-                if (name.includes('pasta') || name.includes('nudel') || name.includes('spaghetti')) {
-                    categorizedDeals.pasta.push(deal);
-                }
-                if (category === 'fleisch' || name.includes('fleisch') || name.includes('schnitzel')) {
-                    categorizedDeals.fleisch.push(deal);
-                    categorizedDeals.protein.push(deal);
-                }
-                if (category === 'fisch' || name.includes('lachs') || name.includes('fisch')) {
-                    categorizedDeals.fisch.push(deal);
-                    categorizedDeals.protein.push(deal);
-                }
-                if (category === 'gemüse' || name.includes('tomate') || name.includes('broccoli')) {
-                    categorizedDeals.gemüse.push(deal);
-                }
-                if (name.includes('reis') || name.includes('kartoffel')) {
-                    categorizedDeals.beilage.push(deal);
-                }
-            });
-
-            // Wähle Template basierend auf verfügbaren Zutaten
-            let selectedRecipe = null;
-            let selectedTemplate = null;
-
-            // Durchsuche alle Templates
-            for (const [templateType, templateData] of Object.entries(recipeTemplates)) {
-                for (const variation of templateData.variations) {
-                    let canMake = true;
-                    let ingredients = {};
-                    
-                    // Prüfe ob alle benötigten Zutaten verfügbar sind
-                    for (const need of variation.needs) {
-                        if (categorizedDeals[need].length === 0) {
-                            canMake = false;
-                            break;
-                        }
-                        // Wähle günstigste Option
-                        ingredients[need.toUpperCase()] = categorizedDeals[need]
-                            .sort((a, b) => a.price - b.price)[0];
-                    }
-
-                    if (canMake) {
-                        // Erstelle Rezept aus Template
-                        selectedRecipe = {
-                            name: variation.name,
-                            ingredients: ingredients,
-                            template: variation,
-                            baseRecipe: templateData.baseRecipe
-                        };
-                        selectedTemplate = templateType;
-                        break;
-                    }
-                }
-                if (selectedRecipe) break;
-            }
-
-            // Generiere finales Rezept
-            if (selectedRecipe) {
-                // Ersetze Platzhalter mit echten Zutaten
-                let recipeName = selectedRecipe.name;
-                let instructions = [...selectedRecipe.template.template];
-                
-                Object.entries(selectedRecipe.ingredients).forEach(([placeholder, deal]) => {
-                    recipeName = recipeName.replace(`{${placeholder}}`, deal.name);
-                    instructions = instructions.map(step => 
-                        step.replace(`{${placeholder}}`, deal.name)
-                    );
-                });
-
-                // Berechne Zutaten mit Mengen
-                const ingredientsList = Object.values(selectedRecipe.ingredients).map(deal => {
-                    // Mengen-Berechnung für 4 Personen
-                    let amount = '400g'; // Standard
-                    if (deal.category === 'fleisch' || deal.category === 'fisch') amount = '600g';
-                    if (deal.category === 'gemüse') amount = '500g';
-                    if (deal.name.includes('reis')) amount = '300g';
-                    if (deal.name.includes('pasta')) amount = '400g';
-                    
-                    // Extra Portionen wenn gewünscht
-                    if (userPreferences.extraPortions) {
-                        const baseAmount = parseInt(amount);
-                        amount = Math.round(baseAmount * 1.5) + amount.replace(/\d+/, '');
-                    }
-                    
-                    return `${amount} ${deal.name} (${deal.store} - CHF ${deal.price.toFixed(2)})`;
-                });
-
-                return {
-                    name: recipeName,
-                    servings: '2 Erwachsene + 2 Kinder',
-                    recipe: {
-                        ingredients: ingredientsList,
-                        instructions: instructions,
-                        time: selectedRecipe.baseRecipe.time,
-                        difficulty: selectedRecipe.baseRecipe.difficulty,
-                        totalCost: Object.values(selectedRecipe.ingredients)
-                            .reduce((sum, deal) => sum + deal.price, 0).toFixed(2)
-                    }
-                };
-            }
-
-            // Fallback auf einfache Rezepte
-            return {
-                name: 'Einfache Pasta',
-                servings: '2 Erwachsene + 2 Kinder',
-                recipe: {
-                    ingredients: ['500g Pasta (aus verfügbaren Angeboten wählen)', '1 Glas Sauce', '100g Käse (optional)'],
-                    instructions: [
-                        'Verfügbare Zutaten kombinieren',
-                        'Nach Geschmack würzen',
-                        'Einfach und schnell zubereiten'
-                    ],
-                    time: '20 Min',
-                    difficulty: 'Sehr einfach',
-                    note: '⚠️ Nicht genug passende Angebote für vollständiges Rezept gefunden'
-                }
-            };
-        };
-
-        // Rezept-Datenbank für Kinder-Mittagessen und Fallback
-        const recipes = {
-            'Kinderfreundliche Nudeln': {
-                ingredients: [
-                    '200g Teigwaren',
-                    '200g Tomaten',
-                    '100g Käse',
-                    '1 Apfel',
-                    '1 Banane'
-                ],
+            pasta: {
+                needs: ['pasta', 'sauce', 'protein'],
+                template: 'Pasta mit {protein} und {sauce}',
                 instructions: [
-                    'Nudeln weich kochen',
-                    'Mit Tomatensauce und Käse mischen',
-                    'In kinderfreundliche Portionen teilen',
-                    'Obst als Nachtisch vorbereiten'
-                ],
-                time: '15 Min',
-                difficulty: 'Sehr einfach',
-                childFriendly: true,
-                categories: ['vegetarian', 'italian'],
-                excludeIngredients: ['Käse']
+                    'Pasta nach Packungsanweisung kochen',
+                    '{protein} in Würfel schneiden und anbraten',
+                    'Mit {sauce} ablöschen',
+                    'Pasta untermischen und servieren'
+                ]
             },
-            'Mini-Pizzas': {
-                ingredients: [
-                    '4 Mini-Pizzaböden',
-                    '200g Tomatensauce',
-                    '150g Käse',
-                    '100g Mais'
-                ],
+            fleisch: {
+                needs: ['fleisch', 'gemüse', 'beilage'],
+                template: '{fleisch} mit {gemüse} und {beilage}',
                 instructions: [
-                    'Pizzaböden mit Sauce bestreichen',
-                    'Mit Käse und Mais belegen',
-                    'Bei 180°C 10 Min backen',
-                    'Abkühlen lassen vor dem Servieren'
-                ],
-                time: '15 Min',
-                difficulty: 'Sehr einfach',
-                childFriendly: true,
-                categories: ['vegetarian', 'italian'],
-                excludeIngredients: ['Käse']
+                    '{fleisch} würzen und braten',
+                    '{gemüse} dünsten',
+                    '{beilage} nach Anweisung zubereiten',
+                    'Alles anrichten'
+                ]
             }
         };
 
-        // Funktion zum Abrufen der Angebote
+        // Status-Nachrichten anzeigen
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Angebote von GitHub abrufen
         async function fetchDeals() {
             const loading = document.getElementById('loading');
-            const errorMessage = document.getElementById('errorMessage');
-            
             loading.classList.add('active');
-            loading.innerHTML = '<div class="spinner"></div><p>Lade aktuelle Angebote...</p>';
-            errorMessage.classList.remove('active');
             
             try {
-                // Lade deals.json von GitHub
+                showStatus('🤖 Lade OCR-Angebote von GitHub...', 'info');
+                
                 const response = await fetch('deals.json?t=' + new Date().getTime());
                 
                 if (!response.ok) {
-                    throw new Error('Datei deals.json nicht gefunden');
+                    throw new Error('deals.json nicht gefunden - GitHub Action noch nicht ausgeführt?');
                 }
                 
                 const data = await response.json();
                 
-                // Prüfe ob echte Daten vorhanden sind
+                // Validiere OCR-Daten
                 if (!data.migros || !data.coop || !data.aldi || !data.lidl) {
                     throw new Error('Ungültiges Datenformat in deals.json');
                 }
@@ -1066,17 +454,9 @@
                 const totalDeals = data.migros.length + data.coop.length + data.aldi.length + data.lidl.length;
                 
                 if (totalDeals === 0) {
-                    loading.classList.remove('active');
-                    errorMessage.innerHTML = `
-                        <strong>❌ Keine Angebote gefunden!</strong><br>
-                        Die GitHub Action wurde noch nicht ausgeführt.<br>
-                        Gehen Sie zu Actions → "Scrape Supermarkt Angebote" → "Run workflow"
-                    `;
-                    errorMessage.classList.add('active');
-                    return;
+                    throw new Error('Keine Angebote gefunden - OCR-Erkennung fehlgeschlagen');
                 }
                 
-                // Verwende echte Daten
                 currentDeals = {
                     'Migros': data.migros,
                     'Coop': data.coop,
@@ -1085,213 +465,207 @@
                 };
                 
                 const lastUpdate = new Date(data.lastUpdate).toLocaleString('de-CH');
+                const method = data.method || 'OCR-Computer-Vision';
                 
-                loading.classList.remove('active');
-                showNotification(`✅ ${totalDeals} aktuelle Angebote geladen! (Stand: ${lastUpdate})`, 'success');
-                
-                // Zeige nächstes Update
-                if (data.nextUpdate) {
-                    const nextUpdate = new Date(data.nextUpdate).toLocaleString('de-CH');
-                    console.log(`Nächstes Update: ${nextUpdate}`);
-                }
+                showStatus(
+                    `✅ ${totalDeals} Angebote durch ${method} erkannt!<br>
+                     🟠 Migros: ${data.migros.length} • 🔴 Coop: ${data.coop.length} • 
+                     🔵 Aldi: ${data.aldi.length} • 🟢 Lidl: ${data.lidl.length}<br>
+                     <small>Stand: ${lastUpdate}</small>`, 
+                    'success'
+                );
                 
             } catch (error) {
+                showStatus(`❌ ${error.message}`, 'error');
+            } finally {
                 loading.classList.remove('active');
-                
-                if (error.message.includes('deals.json nicht gefunden')) {
-                    errorMessage.innerHTML = `
-                        <strong>❌ Setup nicht vollständig!</strong><br>
-                        Die Datei deals.json fehlt. Bitte erstellen Sie diese im Repository.<br>
-                        <a href="https://github.com/Tyzen44/essensplaner/new/main" target="_blank" style="color: #742a2a; text-decoration: underline;">
-                            → Datei jetzt erstellen
-                        </a>
-                    `;
-                } else {
-                    errorMessage.innerHTML = `
-                        <strong>❌ Fehler beim Laden der Angebote</strong><br>
-                        ${error.message}<br>
-                        Prüfen Sie die GitHub Actions Logs für Details.
-                    `;
-                }
-                
-                errorMessage.classList.add('active');
             }
         }
 
-        // Funktion zum Generieren des Essensplans
+        // Intelligente Essensplan-Generierung
         function generateMealPlan() {
             if (Object.keys(currentDeals).length === 0) {
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.innerHTML = `
-                    <strong>❌ Keine Angebote vorhanden!</strong><br>
-                    Bitte klicken Sie zuerst auf "Aktuelle Angebote abrufen".<br>
-                    Falls das nicht funktioniert, prüfen Sie das GitHub Actions Setup.
-                `;
-                errorMessage.classList.add('active');
+                showStatus('⚠️ Bitte laden Sie zuerst die Angebote!', 'error');
                 return;
             }
 
             const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
             
-            // Sammle alle Angebote in einer flachen Liste
+            // Sammle alle Angebote
             const allDeals = [];
             Object.entries(currentDeals).forEach(([store, deals]) => {
-                if (!Array.isArray(deals)) {
-                    showNotification('❌ Fehlerhafte Datenstruktur in deals.json', 'error');
-                    return;
-                }
                 deals.forEach(deal => {
                     allDeals.push({ ...deal, store: store });
                 });
             });
 
-            // Prüfe Kategorie-Ausschlüsse bei der Rezeptgenerierung
-            if (userPreferences.excludeCategories.length > 0) {
-                // Filtere Angebote basierend auf ausgeschlossenen Kategorien
-                for (let i = allDeals.length - 1; i >= 0; i--) {
-                    const deal = allDeals[i];
-                    const category = (deal.category || '').toLowerCase();
-                    
-                    // Prüfe ob Kategorie ausgeschlossen ist
-                    if (userPreferences.excludeCategories.includes('fish') && category === 'fisch') {
-                        allDeals.splice(i, 1);
-                    } else if (userPreferences.excludeCategories.includes('meat') && category === 'fleisch') {
-                        allDeals.splice(i, 1);
-                    } else if (userPreferences.excludeCategories.includes('poultry') && category === 'geflügel') {
-                        allDeals.splice(i, 1);
-                    } else if (userPreferences.excludeCategories.includes('dairy') && category === 'milchprodukte') {
-                        allDeals.splice(i, 1);
-                    }
-                    
-                    // Prüfe spezifische Ausschlüsse
-                    for (let excludeItem of userPreferences.excludeItems) {
-                        if (deal.name.toLowerCase().includes(excludeItem.toLowerCase())) {
-                            allDeals.splice(i, 1);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Prüfe ob nach Filterung noch genug Angebote vorhanden sind
             if (allDeals.length < 10) {
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.innerHTML = `
-                    <strong>⚠️ Zu wenige Angebote gefunden (${allDeals.length})</strong><br>
-                    Mindestens 10 verschiedene Produkte werden benötigt.<br>
-                    Möglicherweise ist der Scraper fehlgeschlagen. Prüfen Sie die GitHub Actions Logs.
-                `;
-                errorMessage.classList.add('active');
+                showStatus('⚠️ Zu wenige Angebote für Essensplan (mindestens 10 benötigt)', 'error');
                 return;
             }
 
             mealPlan = {};
             shoppingList = {};
 
-            // Generiere für jeden Tag ein Rezept basierend auf Angeboten
+            // Generiere für jeden Tag ein intelligentes Rezept
             days.forEach((day, index) => {
-                // Rotiere durch die Angebote für Abwechslung
                 const dayDeals = [...allDeals].sort(() => Math.random() - 0.5);
+                const dinner = generateIntelligentRecipe(dayDeals, day);
                 
-                // Generiere Rezept aus verfügbaren Angeboten
-                const dinner = generateRecipeFromDeals(dayDeals, day);
-                
-                if (!dinner) {
-                    showNotification(`❌ Konnte kein Rezept für ${day} generieren`, 'error');
-                    return;
-                }
-                
-                mealPlan[day] = {
-                    dinner: dinner
-                };
+                mealPlan[day] = { dinner: dinner };
 
-                // Füge Mittagessen für Dienstag und Donnerstag hinzu
+                // Zusätzlich Mittagessen für Kinder (Di + Do)
                 if (day === 'Dienstag' || day === 'Donnerstag') {
-                    // Versuche Kinder-Mittagessen zu generieren
                     const lunch = generateKidsLunch(dayDeals);
-                    if (lunch) {
-                        mealPlan[day].lunch = lunch;
-                    }
+                    if (lunch) mealPlan[day].lunch = lunch;
                 }
             });
 
-            // Prüfe ob Plan vollständig ist
-            if (Object.keys(mealPlan).length < 7) {
-                showNotification('⚠️ Wochenplan konnte nicht vollständig erstellt werden', 'warning');
-            }
-
-            // Erstelle Einkaufsliste basierend auf generierten Rezepten
-            calculateShoppingListFromGeneratedRecipes();
+            // Erstelle intelligente Einkaufsliste
+            generateShoppingList();
             
-            // Zeige den Plan an
+            // Zeige Ergebnisse
             displayMealPlan();
             displayShoppingList();
             
-            showNotification(`✅ Essensplan mit ${allDeals.length} aktuellen Angeboten generiert!`, 'success');
+            showStatus(`🎉 Essensplan mit ${allDeals.length} OCR-Angeboten generiert!`, 'success');
+        }
+
+        // Generiere intelligentes Rezept basierend auf verfügbaren Angeboten
+        function generateIntelligentRecipe(deals, day) {
+            // Kategorisiere Angebote
+            const categories = {
+                fleisch: deals.filter(d => /fleisch|hack|steak|schnitzel/i.test(d.category || d.name)),
+                geflügel: deals.filter(d => /geflügel|huhn|poulet/i.test(d.category || d.name)),
+                fisch: deals.filter(d => /fisch|lachs/i.test(d.category || d.name)),
+                gemüse: deals.filter(d => /gemüse|tomate|salat|karotte/i.test(d.category || d.name)),
+                pasta: deals.filter(d => /pasta|nudel|spaghetti/i.test(d.name)),
+                milch: deals.filter(d => /milch|käse|joghurt/i.test(d.category || d.name)),
+                kartoffeln: deals.filter(d => /kartoffel/i.test(d.name)),
+                reis: deals.filter(d => /reis/i.test(d.name))
+            };
+
+            // Wähle Hauptzutat basierend auf Verfügbarkeit
+            let mainIngredient, recipe;
+            
+            if (categories.fleisch.length > 0) {
+                mainIngredient = categories.fleisch[0];
+                const vegetable = categories.gemüse[0] || { name: 'gemischtes Gemüse', price: 3.50, store: 'Zusatz' };
+                const side = categories.kartoffeln[0] || categories.reis[0] || { name: 'Beilage', price: 2.00, store: 'Zusatz' };
+                
+                recipe = {
+                    name: `${mainIngredient.name} mit ${vegetable.name}`,
+                    ingredients: [
+                        `600g ${mainIngredient.name} (${mainIngredient.store} - CHF ${mainIngredient.price.toFixed(2)})`,
+                        `500g ${vegetable.name} (${vegetable.store} - CHF ${vegetable.price.toFixed(2)})`,
+                        `400g ${side.name} (${side.store} - CHF ${side.price.toFixed(2)})`
+                    ],
+                    instructions: [
+                        `${mainIngredient.name} in Stücke schneiden und würzen`,
+                        'In der Pfanne scharf anbraten',
+                        `${vegetable.name} hinzufügen und mitbraten`,
+                        `${side.name} als Beilage zubereiten`,
+                        'Alles anrichten und servieren'
+                    ],
+                    time: '35 Min',
+                    difficulty: 'Mittel',
+                    ocrGenerated: true
+                };
+            } else if (categories.pasta.length > 0) {
+                mainIngredient = categories.pasta[0];
+                const sauce = categories.gemüse[0] || { name: 'Tomatensauce', price: 2.50, store: 'Zusatz' };
+                const cheese = categories.milch[0] || { name: 'Käse', price: 4.00, store: 'Zusatz' };
+                
+                recipe = {
+                    name: `${mainIngredient.name} mit ${sauce.name}`,
+                    ingredients: [
+                        `500g ${mainIngredient.name} (${mainIngredient.store} - CHF ${mainIngredient.price.toFixed(2)})`,
+                        `300g ${sauce.name} (${sauce.store} - CHF ${sauce.price.toFixed(2)})`,
+                        `100g ${cheese.name} (${cheese.store} - CHF ${cheese.price.toFixed(2)})`
+                    ],
+                    instructions: [
+                        'Pasta in Salzwasser kochen',
+                        'Sauce erwärmen und würzen',
+                        'Pasta abgiessen und mit Sauce mischen',
+                        'Mit Käse servieren'
+                    ],
+                    time: '20 Min',
+                    difficulty: 'Einfach',
+                    ocrGenerated: true
+                };
+            } else {
+                // Fallback-Rezept
+                recipe = {
+                    name: 'Einfaches Abendessen',
+                    ingredients: ['Nach verfügbaren OCR-Angeboten auswählen'],
+                    instructions: ['Verfügbare Zutaten kreativ kombinieren'],
+                    time: '30 Min',
+                    difficulty: 'Flexibel',
+                    note: '⚠️ Nicht genug spezifische Angebote erkannt'
+                };
+            }
+
+            return {
+                name: recipe.name,
+                servings: '4 Portionen',
+                recipe: recipe
+            };
         }
 
         // Generiere Kinder-Mittagessen
         function generateKidsLunch(deals) {
-            // Suche nach kinderfreundlichen Zutaten
-            const pasta = deals.find(d => d.name.toLowerCase().includes('nudel') || d.name.toLowerCase().includes('pasta'));
-            const tomaten = deals.find(d => d.name.toLowerCase().includes('tomate'));
-            const käse = deals.find(d => d.name.toLowerCase().includes('käse'));
+            const pastaDeals = deals.filter(d => /pasta|nudel/i.test(d.name));
+            const tomatoDeals = deals.filter(d => /tomate/i.test(d.name));
             
-            if (pasta && tomaten) {
+            if (pastaDeals.length > 0) {
                 return {
-                    name: 'Nudeln mit Tomatensauce',
-                    servings: '2 Kinder (2 Jahre)',
+                    name: 'Kindernudeln',
+                    servings: '2 Kinder',
                     recipe: {
                         ingredients: [
-                            `200g ${pasta.name} (${pasta.store} - CHF ${pasta.price.toFixed(2)})`,
-                            `200g ${tomaten.name} (${tomaten.store} - CHF ${tomaten.price.toFixed(2)})`,
-                            käse ? `50g ${käse.name} (${käse.store} - CHF ${käse.price.toFixed(2)})` : '50g Käse (optional)'
+                            `250g ${pastaDeals[0].name} (${pastaDeals[0].store})`,
+                            tomatoDeals.length > 0 ? 
+                                `200g ${tomatoDeals[0].name} (${tomatoDeals[0].store})` : 
+                                '200g Tomatensauce'
                         ],
                         instructions: [
-                            'Nudeln weich kochen (2 Minuten länger als angegeben)',
-                            'Tomaten pürieren und erwärmen',
-                            'Nudeln mit Sauce mischen',
-                            käse ? 'Mit geriebenem Käse servieren' : 'Warm servieren'
+                            'Nudeln weich kochen',
+                            'Mit Tomatensauce mischen',
+                            'Kinderfreundlich portionieren'
                         ],
                         time: '15 Min',
                         difficulty: 'Sehr einfach',
-                        totalCost: (pasta.price + tomaten.price + (käse ? käse.price : 0)).toFixed(2)
+                        ocrGenerated: true
                     }
                 };
             }
-            
             return null;
         }
 
-        // Neue Funktion für Einkaufsliste aus generierten Rezepten
-        function calculateShoppingListFromGeneratedRecipes() {
+        // Generiere Einkaufsliste aus Rezepten
+        function generateShoppingList() {
             shoppingList = {};
-
+            
             Object.values(mealPlan).forEach(day => {
                 ['dinner', 'lunch'].forEach(mealType => {
-                    if (day[mealType] && day[mealType].recipe && day[mealType].recipe.ingredients) {
+                    if (day[mealType] && day[mealType].recipe.ingredients) {
                         day[mealType].recipe.ingredients.forEach(ingredient => {
-                            // Parse Zutat (z.B. "400g Pouletbrust (Migros - CHF 9.50)")
-                            const match = ingredient.match(/(\d+g|\d+ml|\d+\s*Stück)?\s*(.+?)\s*\((.+?)\s*-\s*CHF\s*([\d.]+)\)/);
-                            
+                            const match = ingredient.match(/(.+?)\s*\((.+?)\s*-\s*CHF\s*([\d.]+)\)/);
                             if (match) {
-                                const amount = match[1] || '';
-                                const name = match[2];
-                                const store = match[3];
-                                const price = parseFloat(match[4]);
-
+                                const [, name, store, price] = match;
                                 if (!shoppingList[store]) {
                                     shoppingList[store] = [];
                                 }
-
-                                // Prüfe ob bereits vorhanden
-                                const existing = shoppingList[store].find(item => item.name === name);
-                                if (!existing) {
+                                
+                                const existingItem = shoppingList[store].find(item => 
+                                    item.name.toLowerCase().includes(name.toLowerCase().split(' ')[1] || name.toLowerCase())
+                                );
+                                
+                                if (!existingItem) {
                                     shoppingList[store].push({
-                                        name: name,
-                                        price: price,
-                                        unit: amount,
-                                        store: store
+                                        name: name.trim(),
+                                        price: parseFloat(price),
+                                        ocrSource: true
                                     });
                                 }
                             }
@@ -1301,184 +675,10 @@
             });
         }
 
-        // Filtere Rezepte basierend auf Benutzerpräferenzen
-        function filterRecipesByPreferences() {
-            return Object.keys(recipes).filter(recipeName => {
-                const recipe = recipes[recipeName];
-                
-                // Überspringe Kinderrezepte für Abendessen
-                if (recipe.childFriendly) return false;
-                
-                // Prüfe Kategorie-Ausschlüsse
-                if (userPreferences.excludeCategories.length > 0) {
-                    for (let category of recipe.categories || []) {
-                        if (userPreferences.excludeCategories.includes(category)) {
-                            return false;
-                        }
-                    }
-                }
-                
-                // Prüfe spezifische Zutaten-Ausschlüsse
-                if (userPreferences.excludeItems.length > 0) {
-                    for (let item of userPreferences.excludeItems) {
-                        for (let ingredient of recipe.excludeIngredients || []) {
-                            if (ingredient.toLowerCase().includes(item.toLowerCase())) {
-                                return false;
-                            }
-                        }
-                    }
-                }
-                
-                // Prüfe Küchenpräferenzen
-                if (userPreferences.cuisines.length > 0) {
-                    let hasCuisine = false;
-                    for (let cuisine of userPreferences.cuisines) {
-                        if (recipe.categories && recipe.categories.includes(cuisine)) {
-                            hasCuisine = true;
-                            break;
-                        }
-                    }
-                    // Wenn keine passende Küche gefunden wurde und es keine vegetarischen Gerichte sind
-                    if (!hasCuisine && !recipe.categories.includes('vegetarian')) {
-                        return false;
-                    }
-                }
-                
-                return true;
-            });
-        }
-
-        // Präferenz-Funktionen
-        function togglePreferences() {
-            const panel = document.getElementById('preferencesPanel');
-            panel.classList.toggle('active');
-        }
-
-        function savePreferences() {
-            userPreferences.excludeCategories = [];
-            
-            if (document.getElementById('excludeFish').checked) {
-                userPreferences.excludeCategories.push('fish');
-            }
-            if (document.getElementById('excludeMeat').checked) {
-                userPreferences.excludeCategories.push('meat');
-            }
-            if (document.getElementById('excludePoultry').checked) {
-                userPreferences.excludeCategories.push('poultry');
-            }
-            if (document.getElementById('excludeDairy').checked) {
-                userPreferences.excludeCategories.push('dairy');
-            }
-            if (document.getElementById('excludeGluten').checked) {
-                userPreferences.excludeCategories.push('gluten');
-            }
-            
-            // Praktische Einstellungen
-            userPreferences.preferQuick = document.getElementById('preferQuick').checked;
-            userPreferences.extraPortions = document.getElementById('extraPortions').checked;
-            userPreferences.budgetMode = document.getElementById('budgetMode').checked;
-            userPreferences.simpleRecipes = document.getElementById('simpleRecipes').checked;
-            
-            // Speichere in localStorage (simuliert - in echter App würde dies persistiert)
-            try {
-                const prefsString = JSON.stringify(userPreferences);
-                // localStorage würde hier verwendet werden
-                console.log('Präferenzen gespeichert:', prefsString);
-            } catch(e) {
-                console.log('Speichern nicht möglich');
-            }
-        }
-
-        function toggleVegetarian() {
-            const isVeg = document.getElementById('vegetarian').checked;
-            document.getElementById('excludeFish').checked = isVeg;
-            document.getElementById('excludeMeat').checked = isVeg;
-            document.getElementById('excludePoultry').checked = isVeg;
-            savePreferences();
-        }
-
-        function addExclusion() {
-            const input = document.getElementById('excludeInput');
-            const value = input.value.trim();
-            
-            if (value && !userPreferences.excludeItems.includes(value)) {
-                userPreferences.excludeItems.push(value);
-                input.value = '';
-                displayExcludedItems();
-                savePreferences();
-            }
-        }
-
-        function removeExclusion(item) {
-            const index = userPreferences.excludeItems.indexOf(item);
-            if (index > -1) {
-                userPreferences.excludeItems.splice(index, 1);
-                displayExcludedItems();
-                savePreferences();
-            }
-        }
-
-        function displayExcludedItems() {
-            const container = document.getElementById('excludedItems');
-            container.innerHTML = userPreferences.excludeItems.map(item => `
-                <div class="excluded-item">
-                    ${item}
-                    <button onclick="removeExclusion('${item}')">×</button>
-                </div>
-            `).join('');
-        }
-
-        function resetPreferences() {
-            userPreferences = {
-                excludeCategories: [],
-                excludeItems: [],
-                preferQuick: false,
-                extraPortions: false,
-                budgetMode: false,
-                simpleRecipes: false
-            };
-            
-            // Reset checkboxes
-            document.getElementById('excludeFish').checked = false;
-            document.getElementById('excludeMeat').checked = false;
-            document.getElementById('excludePoultry').checked = false;
-            document.getElementById('excludeDairy').checked = false;
-            document.getElementById('excludeGluten').checked = false;
-            document.getElementById('vegetarian').checked = false;
-            
-            document.getElementById('preferQuick').checked = false;
-            document.getElementById('extraPortions').checked = false;
-            document.getElementById('budgetMode').checked = false;
-            document.getElementById('simpleRecipes').checked = false;
-            
-            displayExcludedItems();
-            savePreferences();
-            showNotification('Präferenzen zurückgesetzt!', 'success');
-        }
-
-        function loadPreferences() {
-            // In echter App würde hier aus localStorage geladen
-            displayExcludedItems();
-        }
-
-        // Event Listener für Enter-Taste im Eingabefeld
-        document.addEventListener('DOMContentLoaded', function() {
-            const input = document.getElementById('excludeInput');
-            if (input) {
-                input.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        addExclusion();
-                    }
-                });
-            }
-        });
-
-        // Entfernt: alte calculateShoppingList Funktion (nicht mehr benötigt)
-
-        // Zeige den Essensplan an
+        // Zeige Essensplan
         function displayMealPlan() {
             const container = document.getElementById('mealPlanContainer');
-            container.innerHTML = '<h2 style="text-align: center; margin-bottom: 20px;">📅 Wochenplan</h2>';
+            container.innerHTML = '<h2 style="text-align: center; margin-bottom: 20px;">📅 OCR-Generierter Wochenplan</h2>';
             
             const planGrid = document.createElement('div');
             planGrid.className = 'meal-plan';
@@ -1492,13 +692,13 @@
                 if (meals.dinner) {
                     cardHTML += `
                         <div class="meal">
-                            <div class="meal-type">🌙 Abendessen</div>
+                            <div class="meal-type">🌙 Abendessen <span class="ocr-indicator">OCR</span></div>
                             <div class="meal-name">${meals.dinner.name}</div>
                             <div class="meal-details">${meals.dinner.servings}</div>
-                            ${meals.dinner.recipe ? 
-                                `<button onclick="showRecipe('${day}', 'dinner')" style="margin-top: 10px; padding: 5px 10px; font-size: 14px;">
-                                    📖 Rezept anzeigen
-                                </button>` : ''}
+                            <button onclick="showRecipe('${day}', 'dinner')" 
+                                style="margin-top: 10px; padding: 8px 16px; font-size: 14px; background: linear-gradient(135deg, #48bb78, #38a169);">
+                                📖 Rezept anzeigen
+                            </button>
                         </div>
                     `;
                 }
@@ -1506,13 +706,13 @@
                 if (meals.lunch) {
                     cardHTML += `
                         <div class="meal">
-                            <div class="meal-type">☀️ Mittagessen</div>
+                            <div class="meal-type">☀️ Mittagessen <span class="ocr-indicator">OCR</span></div>
                             <div class="meal-name">${meals.lunch.name}</div>
                             <div class="meal-details">${meals.lunch.servings}</div>
-                            ${meals.lunch.recipe ? 
-                                `<button onclick="showRecipe('${day}', 'lunch')" style="margin-top: 10px; padding: 5px 10px; font-size: 14px;">
-                                    📖 Rezept anzeigen
-                                </button>` : ''}
+                            <button onclick="showRecipe('${day}', 'lunch')" 
+                                style="margin-top: 10px; padding: 8px 16px; font-size: 14px; background: linear-gradient(135deg, #48bb78, #38a169);">
+                                📖 Rezept anzeigen
+                            </button>
                         </div>
                     `;
                 }
@@ -1524,324 +724,14 @@
             container.appendChild(planGrid);
         }
 
-        // Zeige die Einkaufsliste an
+        // Zeige Einkaufsliste
         function displayShoppingList() {
             const container = document.getElementById('shoppingListContainer');
             container.innerHTML = '';
             
             const listDiv = document.createElement('div');
             listDiv.className = 'shopping-list';
-            listDiv.innerHTML = '<h2>🛒 Einkaufsliste</h2>';
+            listDiv.innerHTML = '<h2>🛒 OCR-basierte Einkaufsliste</h2>';
             
             let totalCost = 0;
-
-            Object.entries(shoppingList).forEach(([store, items]) => {
-                const storeSection = document.createElement('div');
-                storeSection.className = 'store-section';
-                
-                let storeCost = 0;
-                let itemsHTML = '<ul class="item-list">';
-                
-                items.forEach(item => {
-                    let priceDisplay = `<span class="price">CHF ${item.price.toFixed(2)}</span>`;
-                    
-                    // Zeige Ersparnis wenn vorhanden
-                    if (item.originalPrice) {
-                        priceDisplay = `
-                            <span style="text-decoration: line-through; color: #999;">CHF ${item.originalPrice.toFixed(2)}</span>
-                            <span class="price">CHF ${item.price.toFixed(2)}</span>
-                        `;
-                    }
-                    
-                    if (item.savings) {
-                        priceDisplay += ` <span style="color: #e53e3e; font-weight: bold;">${item.savings}</span>`;
-                    }
-                    
-                    itemsHTML += `
-                        <li>
-                            <span>${item.name} (${item.unit})</span>
-                            <span>${priceDisplay}</span>
-                        </li>
-                    `;
-                    storeCost += item.price;
-                });
-                
-                itemsHTML += '</ul>';
-                
-                storeSection.innerHTML = `
-                    <div class="store-name">${store}</div>
-                    ${itemsHTML}
-                    <div style="text-align: right; margin-top: 10px; font-weight: 600;">
-                        Zwischensumme: CHF ${storeCost.toFixed(2)}
-                    </div>
-                `;
-                
-                listDiv.appendChild(storeSection);
-                totalCost += storeCost;
-            });
-            
-            listDiv.innerHTML += `
-                <div class="total-cost">
-                    Gesamtkosten: CHF ${totalCost.toFixed(2)}
-                </div>
-            `;
-            
-            container.appendChild(listDiv);
-        }
-
-        // Zeige Rezept Modal
-        function showRecipe(day, mealType) {
-            const meal = mealPlan[day][mealType];
-            if (!meal || !meal.recipe) return;
-            
-            const modal = document.getElementById('recipeModal');
-            const details = document.getElementById('recipeDetails');
-            
-            // Prüfe ob es ein generiertes Rezept ist (hat totalCost)
-            const isGenerated = meal.recipe.totalCost !== undefined;
-            
-            details.innerHTML = `
-                <h3>${meal.name}</h3>
-                <p><strong>⏱️ Zeit:</strong> ${meal.recipe.time}</p>
-                <p><strong>📊 Schwierigkeit:</strong> ${meal.recipe.difficulty}</p>
-                ${isGenerated ? `<p><strong>💰 Kosten:</strong> CHF ${meal.recipe.totalCost}</p>` : ''}
-                
-                <h4>📝 Zutaten:</h4>
-                <ul>
-                    ${meal.recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
-                </ul>
-                
-                <h4>👩‍🍳 Zubereitung:</h4>
-                <ol>
-                    ${meal.recipe.instructions.map(inst => `<li>${inst}</li>`).join('')}
-                </ol>
-                
-                ${isGenerated ? '<p style="margin-top: 20px; font-style: italic; color: #666;">✨ Dieses Rezept wurde basierend auf aktuellen Angeboten generiert!</p>' : ''}
-                ${meal.recipe.note ? `<p style="margin-top: 10px; color: #e53e3e;">${meal.recipe.note}</p>` : ''}
-            `;
-            
-            modal.classList.add('active');
-        }
-
-        // Schließe Rezept Modal
-        function closeRecipeModal() {
-            document.getElementById('recipeModal').classList.remove('active');
-        }
-
-        // Exportiere den Plan
-        function exportPlan() {
-            if (Object.keys(mealPlan).length === 0) {
-                showNotification('Bitte generieren Sie zuerst einen Essensplan!', 'error');
-                return;
-            }
-
-            let exportText = 'WÖCHENTLICHER ESSENSPLAN\n';
-            exportText += '========================\n\n';
-            
-            Object.entries(mealPlan).forEach(([day, meals]) => {
-                exportText += `${day}:\n`;
-                if (meals.dinner) {
-                    exportText += `  Abendessen: ${meals.dinner.name} (${meals.dinner.servings})\n`;
-                }
-                if (meals.lunch) {
-                    exportText += `  Mittagessen: ${meals.lunch.name} (${meals.lunch.servings})\n`;
-                }
-                exportText += '\n';
-            });
-            
-            exportText += '\nEINKAUFSLISTE\n';
-            exportText += '=============\n\n';
-            
-            Object.entries(shoppingList).forEach(([store, items]) => {
-                exportText += `${store}:\n`;
-                items.forEach(item => {
-                    exportText += `  - ${item.name} (${item.unit}): CHF ${item.price.toFixed(2)}\n`;
-                });
-                exportText += '\n';
-            });
-            
-            // Download als Textdatei
-            const blob = new Blob([exportText], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Essensplan_${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            
-            showNotification('Plan wurde exportiert!', 'success');
-        }
-
-        // PDF Export Funktion
-        async function exportPDF() {
-            if (Object.keys(mealPlan).length === 0) {
-                showNotification('Bitte generieren Sie zuerst einen Essensplan!', 'error');
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Titel
-            doc.setFontSize(24);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Wochenplan', 105, 20, { align: 'center' });
-            
-            // Datum
-            doc.setFontSize(12);
-            doc.setTextColor(100);
-            const heute = new Date();
-            const woche = getWeekNumber(heute);
-            doc.text(`Kalenderwoche ${woche} - ${heute.toLocaleDateString('de-CH')}`, 105, 30, { align: 'center' });
-            
-            // Wochenplan
-            doc.setTextColor(0);
-            let yPos = 45;
-            
-            Object.entries(mealPlan).forEach(([day, meals]) => {
-                // Tag
-                doc.setFontSize(14);
-                doc.setFont(undefined, 'bold');
-                doc.text(day, 20, yPos);
-                doc.setFont(undefined, 'normal');
-                
-                // Abendessen
-                doc.setFontSize(11);
-                doc.text(`Abendessen: ${meals.dinner.name}`, 30, yPos + 7);
-                doc.setFontSize(9);
-                doc.setTextColor(100);
-                doc.text(meals.dinner.servings, 30, yPos + 12);
-                
-                // Zeige Kosten wenn vorhanden
-                if (meals.dinner.recipe && meals.dinner.recipe.totalCost) {
-                    doc.setTextColor(72, 187, 120);
-                    doc.text(`CHF ${meals.dinner.recipe.totalCost}`, 150, yPos + 7);
-                }
-                
-                // Mittagessen wenn vorhanden
-                if (meals.lunch) {
-                    doc.setTextColor(0);
-                    doc.setFontSize(11);
-                    doc.text(`Mittagessen: ${meals.lunch.name}`, 30, yPos + 19);
-                    doc.setFontSize(9);
-                    doc.setTextColor(100);
-                    doc.text(meals.lunch.servings, 30, yPos + 24);
-                    yPos += 35;
-                } else {
-                    yPos += 25;
-                }
-                
-                doc.setTextColor(0);
-                
-                // Neue Seite wenn nötig
-                if (yPos > 250) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-            });
-            
-            // Neue Seite für Einkaufsliste
-            doc.addPage();
-            doc.setFontSize(20);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Einkaufsliste', 105, 20, { align: 'center' });
-            
-            yPos = 35;
-            let totalCost = 0;
-            
-            Object.entries(shoppingList).forEach(([store, items]) => {
-                // Store Name
-                doc.setFontSize(14);
-                doc.setFont(undefined, 'bold');
-                doc.setTextColor(0);
-                doc.text(store, 20, yPos);
-                doc.setFont(undefined, 'normal');
-                yPos += 8;
-                
-                let storeCost = 0;
-                
-                items.forEach(item => {
-                    doc.setFontSize(10);
-                    doc.text(`• ${item.name} (${item.unit})`, 25, yPos);
-                    doc.text(`CHF ${item.price.toFixed(2)}`, 170, yPos, { align: 'right' });
-                    
-                    if (item.savings) {
-                        doc.setTextColor(220, 38, 38);
-                        doc.setFontSize(9);
-                        doc.text(item.savings, 150, yPos);
-                        doc.setTextColor(0);
-                    }
-                    
-                    storeCost += item.price;
-                    yPos += 6;
-                });
-                
-                // Store Summe
-                doc.setFontSize(11);
-                doc.setFont(undefined, 'bold');
-                doc.text(`Zwischensumme: CHF ${storeCost.toFixed(2)}`, 170, yPos + 2, { align: 'right' });
-                doc.setFont(undefined, 'normal');
-                
-                totalCost += storeCost;
-                yPos += 15;
-                
-                // Neue Seite wenn nötig
-                if (yPos > 250) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-            });
-            
-            // Gesamtsumme
-            doc.setFontSize(14);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(102, 126, 234);
-            doc.text(`Gesamtkosten: CHF ${totalCost.toFixed(2)}`, 105, yPos + 10, { align: 'center' });
-            
-            // PDF speichern
-            const fileName = `Essensplan_KW${getWeekNumber(new Date())}_${new Date().toISOString().split('T')[0]}.pdf`;
-            doc.save(fileName);
-            
-            showNotification('PDF wurde erfolgreich erstellt!', 'success');
-        }
-
-        // Hilfsfunktion für Kalenderwoche
-        function getWeekNumber(date) {
-            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
-        }
-
-        // Zeige Benachrichtigungen
-        function showNotification(message, type) {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            
-            if (type === 'success') {
-                errorMessage.style.background = '#c6f6d5';
-                errorMessage.style.color = '#22543d';
-            } else if (type === 'error') {
-                errorMessage.style.background = '#fed7d7';
-                errorMessage.style.color = '#742a2a';
-            } else {
-                errorMessage.style.background = '#bee3f8';
-                errorMessage.style.color = '#2c5282';
-            }
-            
-            errorMessage.classList.add('active');
-            
-            setTimeout(() => {
-                errorMessage.classList.remove('active');
-            }, 3000);
-        }
-
-        // Initiale Nachricht
-        window.addEventListener('load', function() {
-            loadPreferences();
-            showNotification('Klicken Sie auf "Aktuelle Angebote abrufen" um zu beginnen!', 'info');
-        });
-    </script>
-</body>
-</html>
+            const storeEmojis = { 'Migros': '🟠', 'Coop': '🔴', 'Aldi':
