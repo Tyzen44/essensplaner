@@ -1,32 +1,16 @@
-name: Scrape Supermarkt Angebote mit OCR
+name: OCR Supermarkt Scraper
 
 on:
   schedule:
-    # Täglich um 6:00 UTC (8:00 Schweizer Zeit)
     - cron: '0 6 * * *'
-    # Zusätzlich Montag und Donnerstag um 5:00 UTC (neue Wochen-Angebote)
     - cron: '0 5 * * 1,4'
   workflow_dispatch:
     inputs:
       debug:
-        description: 'Debug-Modus aktivieren'
+        description: Debug-Modus aktivieren
         required: false
         default: 'false'
-        type: choice
-        options:
-        - 'false'
-        - 'true'
-      stores:
-        description: 'Stores zu scrapen'
-        required: false
-        default: 'alle'
-        type: choice
-        options:
-        - 'alle'
-        - 'migros'
-        - 'coop'
-        - 'aldi'
-        - 'lidl'
+        type: boolean
 
 jobs:
   scrape-deals:
@@ -34,361 +18,59 @@ jobs:
     timeout-minutes: 30
     
     steps:
-    - name: Checkout Repository
+    - name: Checkout
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        
+      
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         
-    - name: Install System Dependencies (OCR)
+    - name: Install System Dependencies
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y \
-          tesseract-ocr \
-          tesseract-ocr-deu \
-          tesseract-ocr-fra \
-          tesseract-ocr-eng \
-          libtesseract-dev \
-          libleptonica-dev \
-          pkg-config \
-          libvips-dev \
-          xvfb \
-          fonts-liberation \
-          fonts-dejavu-core
-          
-    - name: Verify Tesseract Installation
+        sudo apt-get update
+        sudo apt-get install -y tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng libtesseract-dev libleptonica-dev pkg-config libvips-dev xvfb
+        
+    - name: Verify Tesseract
       run: |
         tesseract --version
-        echo "Verfügbare Sprachen:"
         tesseract --list-langs
         
-    - name: Create Debug Directories
-      run: |
-        mkdir -p screenshots debug local-debug/screenshots local-debug/ocr-text
-        echo "Debug-Ordner erstellt"
-        
     - name: Install Dependencies
-      run: |
-        npm install
-        echo "Dependencies installiert:"
-        npm ls tesseract.js sharp puppeteer-extra --depth=0 || true
+      run: npm install
         
     - name: Run OCR Scraper
       env:
-        DEBUG_OCR: ${{ github.event.inputs.debug == 'true' }}
-        NODE_ENV: 'production'
-        TEST_STORE: ${{ github.event.inputs.stores }}
+        DEBUG_OCR: ${{ github.event.inputs.debug }}
+        NODE_ENV: production
       run: |
-        # Virtual Display für Browser
         export DISPLAY=:99
-        Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
-        
-        # Warte bis Display bereit ist
+        Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
         sleep 3
-        
-        # Debug-Information
-        echo "🔧 System-Info:"
-        echo "Node Version: $(node --version)"
-        echo "NPM Version: $(npm --version)"
-        echo "Tesseract Version: $(tesseract --version | head -1)"
-        echo "Display: $DISPLAY"
-        echo "Debug Mode: $DEBUG_OCR"
-        echo "Store Filter: $TEST_STORE"
-        echo ""
-        
-        # OCR Scraper ausführen mit Timeout
-        echo "🚀 Starte OCR-Scraper..."
-        timeout 25m node scraper.js || {
-          echo "⚠️ Scraper beendet (Timeout oder Completion)"
-          echo "Exit Code: $?"
-        }
+        timeout 25m node scraper.js
         
     - name: Validate Results
       run: |
-        echo "🔍 Validiere OCR-Ergebnisse..."
-        
         if [ -f "deals.json" ]; then
-          echo "✅ deals.json wurde erstellt"
-          
-          # JSON validieren und Statistiken ausgeben
-          node -e "
-            try {
-              const fs = require('fs');
-              const data = JSON.parse(fs.readFileSync('deals.json', 'utf8'));
-              
-              const migros = data.migros?.length || 0;
-              const coop = data.coop?.length || 0;
-              const aldi = data.aldi?.length || 0;
-              const lidl = data.lidl?.length || 0;
-              const total = migros + coop + aldi + lidl;
-              
-              console.log('📊 OCR-Scraping Ergebnisse:');
-              console.log('🟠 Migros:', migros, 'Angebote');
-              console.log('🔴 Coop:', coop, 'Angebote');
-              console.log('🔵 Aldi:', aldi, 'Angebote');
-              console.log('🟢 Lidl:', lidl, 'Angebote');
-              console.log('📈 Total:', total, 'Angebote');
-              console.log('🤖 Methode:', data.method || 'OCR-Computer-Vision');
-              console.log('🔤 OCR Engine:', data.ocrEngine || 'Tesseract.js');
-              
-              if (data.lastUpdate) {
-                const updateTime = new Date(data.lastUpdate).toLocaleString('de-CH');
-                console.log('🕐 Letztes Update:', updateTime);
-              }
-              
-              // Qualitätsprüfung
-              if (total === 0) {
-                console.error('❌ KRITISCH: Keine Angebote gefunden - OCR komplett fehlgeschlagen');
-                process.exit(1);
-              }
-              
-              if (total < 10) {
-                console.warn('⚠️ WARNUNG: Sehr wenige Angebote (' + total + ') - OCR möglicherweise unvollständig');
-                console.warn('   Mögliche Ursachen: Website-Änderungen, Anti-Bot-Maßnahmen, OCR-Qualität');
-              } else if (total < 30) {
-                console.warn('⚠️ Wenige Angebote (' + total + ') - prüfen Sie die Qualität');
-              } else {
-                console.log('✅ Gute OCR-Erkennungsrate (' + total + ' Angebote)');
-              }
-              
-              // Beispiel-Angebote zeigen
-              console.log('');
-              console.log('🔍 Beispiel-Angebote:');
-              const allDeals = [...(data.migros || []), ...(data.coop || []), ...(data.aldi || []), ...(data.lidl || [])];
-              allDeals.slice(0, 5).forEach((deal, i) => {
-                console.log('  ' + (i+1) + '. ' + deal.name + ' - CHF ' + deal.price + ' (' + deal.store + ')');
-              });
-              
-            } catch (error) {
-              console.error('❌ KRITISCH: deals.json ist ungültig:', error.message);
-              process.exit(1);
-            }
-          "
+          echo "deals.json created successfully"
+          node -e "const data=JSON.parse(require('fs').readFileSync('deals.json','utf8'));const total=(data.migros||[]).length+(data.coop||[]).length+(data.aldi||[]).length+(data.lidl||[]).length;console.log('Total deals found:',total);if(total===0)process.exit(1);"
         else
-          echo "❌ KRITISCH: deals.json nicht gefunden"
-          echo "Mögliche Ursachen:"
-          echo "- Scraper ist abgestürzt"
-          echo "- Alle Websites nicht erreichbar"
-          echo "- Tesseract OCR funktioniert nicht"
-          echo "- Timeout erreicht"
+          echo "Error: deals.json not found"
           exit 1
         fi
         
-    - name: Check for Significant Changes
-      id: check_changes
+    - name: Commit and Push
       run: |
-        if [ -f "deals.json" ]; then
-          # Vergleiche mit vorheriger Version falls vorhanden
-          if git show HEAD:deals.json > previous_deals.json 2>/dev/null; then
-            echo "📊 Analysiere Änderungen..."
-            
-            node -e "
-              try {
-                const fs = require('fs');
-                const prev = JSON.parse(fs.readFileSync('previous_deals.json', 'utf8'));
-                const curr = JSON.parse(fs.readFileSync('deals.json', 'utf8'));
-                
-                const prevTotal = (prev.migros?.length || 0) + (prev.coop?.length || 0) + 
-                                 (prev.aldi?.length || 0) + (prev.lidl?.length || 0);
-                const currTotal = (curr.migros?.length || 0) + (curr.coop?.length || 0) + 
-                                 (curr.aldi?.length || 0) + (curr.lidl?.length || 0);
-                
-                const difference = currTotal - prevTotal;
-                const percentChange = prevTotal > 0 ? Math.abs(difference / prevTotal) * 100 : 0;
-                
-                console.log('📈 Änderungsanalyse:');
-                console.log('  Vorher:', prevTotal, 'Angebote');
-                console.log('  Jetzt:', currTotal, 'Angebote');
-                console.log('  Unterschied:', difference > 0 ? '+' + difference : difference);
-                console.log('  Prozentuale Änderung:', percentChange.toFixed(1) + '%');
-                
-                if (percentChange > 70 && currTotal < 15) {
-                  console.warn('⚠️ WARNUNG: Drastische Reduzierung - möglicherweise OCR-Problem');
-                  console.warn('  Aber da es OCR ist, können schwankende Erkennungsraten normal sein');
-                }
-                
-                if (difference > 20) {
-                  console.log('🎉 Deutlich mehr Angebote erkannt - OCR-Verbesserung!');
-                } else if (difference < -20) {
-                  console.log('📉 Weniger Angebote - möglicherweise weniger aktuelle Aktionen');
-                }
-                
-              } catch (error) {
-                console.log('ℹ️ Änderungsanalyse nicht möglich:', error.message);
-              }
-            " || echo "Änderungsanalyse abgeschlossen"
-          else
-            echo "ℹ️ Erste Ausführung - keine Vergleichsdaten vorhanden"
-          fi
-        fi
-        
-    - name: Commit und Push Ergebnisse
-      run: |
-        # Git-Konfiguration
-        git config --local user.email "action@github.com"
-        git config --local user.name "OCR Scraper Bot"
-        
-        # Füge deals.json hinzu
+        git config user.email "action@github.com"
+        git config user.name "OCR Bot"
         git add deals.json
-        
-        # Erstelle Commit-Message mit OCR-Statistiken
-        if [ -f "deals.json" ]; then
-          COMMIT_MSG=$(node -e "
-            try {
-              const data = JSON.parse(require('fs').readFileSync('deals.json', 'utf8'));
-              const total = (data.migros?.length || 0) + (data.coop?.length || 0) + 
-                           (data.aldi?.length || 0) + (data.lidl?.length || 0);
-              console.log('🤖 OCR Update: ' + total + ' Angebote | M:' + (data.migros?.length || 0) + 
-                         ' C:' + (data.coop?.length || 0) + ' A:' + (data.aldi?.length || 0) + 
-                         ' L:' + (data.lidl?.length || 0));
-            } catch(e) {
-              console.log('🤖 OCR Update: Ergebnisse verfügbar');
-            }
-          ")
-          
-          TIMESTAMP=$(date +'%Y-%m-%d %H:%M UTC')
-          
-          git commit -m "$COMMIT_MSG" -m "Automatisches Update durch Computer Vision OCR - $TIMESTAMP
-
-OCR-Engine: Tesseract.js (deu+eng)
-Methode: Screenshot-Analyse mit Pattern-Matching
-Browser: Puppeteer + Stealth Plugin
-Anti-Bot: Cloudflare-Umgehung aktiv
-
-Generated by GitHub Actions"
-        else
-          git commit -m "🤖 OCR Scraper ausgeführt (keine Ergebnisse) - $(date +'%Y-%m-%d %H:%M UTC')"
-        fi
-        
-        # Push changes
+        git commit -m "OCR Update $(date +%Y-%m-%d)"
         git push
         
-    - name: Create Execution Summary
-      if: always()
+    - name: Create Summary
       run: |
-        echo "## 🤖 OCR-Scraper Ausführungsbericht" >> $GITHUB_STEP_SUMMARY
-        echo "**Ausführungszeit:** $(date +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
-        echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-        
-        if [ "${{ github.event.inputs.debug }}" == "true" ]; then
-          echo "**Debug-Modus:** 🔍 Aktiviert" >> $GITHUB_STEP_SUMMARY
-        fi
-        
-        if [ "${{ github.event.inputs.stores }}" != "alle" ]; then
-          echo "**Store-Filter:** ${{ github.event.inputs.stores }}" >> $GITHUB_STEP_SUMMARY
-        fi
-        
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
+        echo "# OCR Results" >> $GITHUB_STEP_SUMMARY
+        echo "Date: $(date)" >> $GITHUB_STEP_SUMMARY
         if [ -f "deals.json" ]; then
-          node -e "
-            try {
-              const data = JSON.parse(require('fs').readFileSync('deals.json', 'utf8'));
-              console.log('### 📊 OCR-Ergebnisse');
-              console.log('');
-              console.log('| Supermarkt | Angebote | Status |');
-              console.log('|------------|----------|---------|');
-              
-              const migros = data.migros?.length || 0;
-              const coop = data.coop?.length || 0;
-              const aldi = data.aldi?.length || 0;
-              const lidl = data.lidl?.length || 0;
-              
-              console.log('| 🟠 **Migros** | ' + migros + ' | ' + (migros > 15 ? '✅ Gut' : migros > 5 ? '⚠️ OK' : '❌ Schwach') + ' |');
-              console.log('| 🔴 **Coop** | ' + coop + ' | ' + (coop > 10 ? '✅ Gut' : coop > 3 ? '⚠️ OK' : '❌ Schwach') + ' |');
-              console.log('| 🔵 **Aldi** | ' + aldi + ' | ' + (aldi > 15 ? '✅ Gut' : aldi > 5 ? '⚠️ OK' : '❌ Schwach') + ' |');
-              console.log('| 🟢 **Lidl** | ' + lidl + ' | ' + (lidl > 10 ? '✅ Gut' : lidl > 3 ? '⚠️ OK' : '❌ Schwach') + ' |');
-              console.log('');
-              
-              const total = migros + coop + aldi + lidl;
-              console.log('**🎯 Gesamt:** ' + total + ' Angebote erkannt');
-              console.log('');
-              
-              // Qualitätsbewertung
-              if (total >= 50) {
-                console.log('**📈 Qualität:** 🟢 Ausgezeichnet (' + total + ' Angebote)');
-              } else if (total >= 30) {
-                console.log('**📈 Qualität:** 🟡 Gut (' + total + ' Angebote)');
-              } else if (total >= 10) {
-                console.log('**📈 Qualität:** 🟠 Ausreichend (' + total + ' Angebote)');
-              } else {
-                console.log('**📈 Qualität:** 🔴 Schwach (' + total + ' Angebote)');
-              }
-              
-              console.log('');
-              console.log('### 🔧 Technische Details');
-              console.log('- **OCR-Engine:** ' + (data.ocrEngine || 'Tesseract.js'));
-              console.log('- **Methode:** ' + (data.method || 'Computer Vision'));
-              console.log('- **Sprachen:** Deutsch + Englisch');
-              console.log('- **Browser:** Puppeteer + Stealth Plugin');
-              console.log('- **Anti-Bot:** Cloudflare-Umgehung aktiv');
-              
-              if (data.lastUpdate) {
-                const updateTime = new Date(data.lastUpdate).toLocaleString('de-CH');
-                console.log('- **Zeitstempel:** ' + updateTime);
-              }
-              
-            } catch (error) {
-              console.log('### ❌ Fehler bei der Ergebnisanalyse');
-              console.log('```');
-              console.log(error.message);
-              console.log('```');
-            }
-          " >> $GITHUB_STEP_SUMMARY
-        else
-          echo "### ❌ OCR-Scraper Fehlgeschlagen" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Mögliche Ursachen:**" >> $GITHUB_STEP_SUMMARY
-          echo "- Tesseract OCR-Installation fehlerhaft" >> $GITHUB_STEP_SUMMARY
-          echo "- Alle Websites nicht erreichbar" >> $GITHUB_STEP_SUMMARY
-          echo "- Anti-Bot-Maßnahmen haben alle Zugriffe blockiert" >> $GITHUB_STEP_SUMMARY
-          echo "- Timeout nach 25 Minuten erreicht" >> $GITHUB_STEP_SUMMARY
-          echo "- Speicher- oder CPU-Probleme" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Empfohlene Maßnahmen:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Prüfen Sie die Workflow-Logs für Details" >> $GITHUB_STEP_SUMMARY
-          echo "2. Aktivieren Sie den Debug-Modus für mehr Informationen" >> $GITHUB_STEP_SUMMARY
-          echo "3. Testen Sie einzelne Stores mit dem Store-Filter" >> $GITHUB_STEP_SUMMARY
+          node -e "const d=JSON.parse(require('fs').readFileSync('deals.json','utf8'));console.log('Migros:',(d.migros||[]).length);console.log('Coop:',(d.coop||[]).length);console.log('Aldi:',(d.aldi||[]).length);console.log('Lidl:',(d.lidl||[]).length);" >> $GITHUB_STEP_SUMMARY
         fi
-        
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "---" >> $GITHUB_STEP_SUMMARY
-        echo "🚀 **Nächste Ausführung:** $(date -d '+1 day' +'%Y-%m-%d 08:00 Schweizer Zeit')" >> $GITHUB_STEP_SUMMARY
-        
-    - name: Upload Debug Files (bei Fehlern oder Debug-Modus)
-      if: failure() || github.event.inputs.debug == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ocr-debug-files-${{ github.run_number }}
-        path: |
-          debug_*.txt
-          local-debug/
-          screenshots/
-          test-results.json
-        retention-days: 7
-        if-no-files-found: ignore
-        
-    - name: Notify on Critical Failure
-      if: failure()
-      run: |
-        echo "## 🚨 Kritischer OCR-Scraper Fehler" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Der OCR-basierte Supermarkt-Scraper ist fehlgeschlagen." >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Debugging-Schritte:**" >> $GITHUB_STEP_SUMMARY
-        echo "1. Pruefen Sie die Workflow-Logs fuer detaillierte Fehlermeldungen" >> $GITHUB_STEP_SUMMARY
-        echo "2. Laden Sie die Debug-Artifacts herunter fuer OCR-Textanalyse" >> $GITHUB_STEP_SUMMARY
-        echo "3. Aktivieren Sie den Debug-Modus fuer die naechste Ausfuehrung" >> $GITHUB_STEP_SUMMARY
-        echo "4. Testen Sie einzelne Stores mit dem Store-Filter" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Haeufige Loesungen:**" >> $GITHUB_STEP_SUMMARY
-        echo "- Warten Sie 1-2 Stunden und fuehren Sie den Workflow erneut aus" >> $GITHUB_STEP_SUMMARY  
-        echo "- Websites koennten temporaer nicht verfuegbar sein" >> $GITHUB_STEP_SUMMARY
-        echo "- Anti-Bot-Massnahmen koennten verstaerkt worden sein" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Support:** Pruefen Sie die Repository-Dokumentation fuer weitere Hilfe" >> $GITHUB_STEP_SUMMARY
