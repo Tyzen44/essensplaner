@@ -1,10 +1,59 @@
 {
   "migros": [],
-  "coop": [],
-  "aldi": [],
+  "coop": [
+    {
+      "name": "Java",
+      "price": 20.1,
+      "unit": "Stück",
+      "category": "Sonstiges",
+      "store": "Coop",
+      "ocrSource": true
+    },
+    {
+      "name": "Java",
+      "price": 9.36,
+      "unit": "Stück",
+      "category": "Sonstiges",
+      "store": "Coop",
+      "ocrSource": true
+    }
+  ],
+  "aldi": [
+    {
+      "name": "Stück I",
+      "price": 6.99,
+      "unit": "Stück",
+      "category": "Sonstiges",
+      "store": "Aldi",
+      "ocrSource": true
+    },
+    {
+      "name": "Stück I",
+      "price": 9.99,
+      "unit": "Stück",
+      "category": "Sonstiges",
+      "store": "Aldi",
+      "ocrSource": true
+    },
+    {
+      "name": "Ving Mo Po",
+      "price": 12.99,
+      "unit": "Stück",
+      "category": "Sonstiges",
+      "store": "Aldi",
+      "ocrSource": true
+    },
+    {
+      "name": "Ving Mo Po",
+      "price": 24.99,
+      "unit": "Stück",
+      "category": "Sonstiges",
+      "store": "Aldi",
+      "ocrSource": true
+    }
+  ],
   "lidl": [],
-  "lastUpdate": null,
+  "lastUpdate": "2025-08-23T14:01:28.936Z",
   "method": "OCR-Computer-Vision",
-  "ocrEngine": "Tesseract.js",
-  "note": "Diese Datei wird automatisch durch die GitHub Action mit OCR-erkannten Angeboten gefüllt"
+  "ocrEngine": "Tesseract.js"
 }
