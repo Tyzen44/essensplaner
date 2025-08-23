@@ -2,502 +2,500 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const fs = require('fs').promises;
 const path = require('path');
+const Tesseract = require('tesseract.js');
+const sharp = require('sharp');
 
-// Aktiviere Stealth-Plugin mit allen Evasions
-const stealth = StealthPlugin();
-stealth.enabledEvasions.delete('iframe.contentWindow');
-stealth.enabledEvasions.delete('media.codecs');
-puppeteer.use(stealth);
+// Aktiviere Stealth-Plugin für Anti-Bot-Umgehung
+puppeteer.use(StealthPlugin());
 
-// Debug-Modus
-const DEBUG = process.env.DEBUG === 'true';
+// OCR-Konfiguration
+const OCR_CONFIG = {
+  lang: 'deu+eng',
+  options: {
+    tessedit_char_whitelist: '0123456789.,CHFchfabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZäöüÄÖÜßéèàêâôûîç-% ',
+    tessedit_pageseg_mode: 6 // Assume uniform block of text
+  }
+};
 
-// Starte Scraper
+console.log('🤖 Starte OCR-basierten Supermarkt-Scraper...');
+console.log('📋 Computer Vision Modus - Angebote werden aus Screenshots erkannt');
+
 (async () => {
-  console.log('🛒 Starte erweiterten Scraping der Supermarkt-Angebote...');
-  console.log('📍 Umgebung:', process.env.CI ? 'GitHub Actions' : 'Lokal');
-
-  const browser = await puppeteer.launch({
-    headless: process.env.CI ? 'new' : false, // Headless in CI, sonst sichtbar
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-blink-features=AutomationControlled',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process', // Wichtig für CI
-      '--disable-gpu',
-      '--window-size=1920,1080',
-      '--start-maximized',
-      '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    ],
-    defaultViewport: null,
-    ignoreDefaultArgs: ['--enable-automation']
-  });
-
-  const results = {
-    migros: [],
-    coop: [],
-    aldi: [],
-    lidl: [],
-    lastUpdate: new Date().toISOString(),
-    nextUpdate: getNextUpdateDate()
-  };
-
+  let browser;
+  
   try {
-    // Versuche verschiedene Ansätze
-    console.log('\n📊 Starte Scraping...\n');
+    browser = await puppeteer.launch({
+      headless: process.env.NODE_ENV === 'production',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-dev-shm-usage',
+        '--window-size=1920,1080',
+        '--lang=de-CH,de,en'
+      ],
+      ignoreDefaultArgs: ['--enable-automation']
+    });
+
+    const results = {
+      migros: [],
+      coop: [],
+      aldi: [],
+      lidl: [],
+      lastUpdate: new Date().toISOString(),
+      method: 'OCR-Computer-Vision',
+      ocrEngine: 'Tesseract.js'
+    };
+
+    // Scrape alle Stores mit OCR
+    console.log('🟠 Starte Migros OCR...');
+    results.migros = await scrapeStoreWithOCR(browser, 'migros');
     
-    // Migros - API first, dann Scraper
-    results.migros = await scrapeMigrosAPI();
-    if (results.migros.length === 0) {
-      results.migros = await scrapeMigros(browser);
-    }
+    console.log('🔴 Starte Coop OCR...');
+    results.coop = await scrapeStoreWithOCR(browser, 'coop');
     
-    // Andere Shops
-    results.coop = await scrapeCoop(browser);
-    results.aldi = await scrapeAldi(browser);
-    results.lidl = await scrapeLidl(browser);
+    console.log('🔵 Starte Aldi OCR...');
+    results.aldi = await scrapeStoreWithOCR(browser, 'aldi');
     
-    // Falls alle fehlschlagen, nutze Notfall-Daten
-    const totalFound = results.migros.length + results.coop.length + results.aldi.length + results.lidl.length;
-    if (totalFound === 0) {
-      console.log('\n⚠️  Keine echten Daten gefunden. Generiere Beispieldaten...');
-      results = generateFallbackData();
-    }
-    
-  } catch (err) {
-    console.error('❌ Kritischer Fehler:', err);
-    results = generateFallbackData();
-  } finally {
-    await browser.close();
-    
+    console.log('🟢 Starte Lidl OCR...');
+    results.lidl = await scrapeStoreWithOCR(browser, 'lidl');
+
     // Speichere Ergebnisse
-    await fs.writeFile(path.join(__dirname, 'deals.json'), JSON.stringify(results, null, 2));
-    
-    const total = results.migros.length + results.coop.length + results.aldi.length + results.lidl.length;
-    console.log('\n📊 Zusammenfassung:');
-    console.log(`   Migros: ${results.migros.length} Angebote`);
-    console.log(`   Coop: ${results.coop.length} Angebote`);
-    console.log(`   Aldi: ${results.aldi.length} Angebote`);
-    console.log(`   Lidl: ${results.lidl.length} Angebote`);
-    console.log(`   GESAMT: ${total} Angebote`);
-    console.log('\n💾 deals.json gespeichert!');
+    await fs.writeFile(
+      path.join(__dirname, 'deals.json'), 
+      JSON.stringify(results, null, 2)
+    );
+
+    const totalDeals = results.migros.length + results.coop.length + 
+                      results.aldi.length + results.lidl.length;
+
+    console.log('\n✅ OCR-Scraping abgeschlossen!');
+    console.log(`📊 Gesamt: ${totalDeals} Angebote erkannt`);
+    console.log(`🟠 Migros: ${results.migros.length} Angebote`);
+    console.log(`🔴 Coop: ${results.coop.length} Angebote`);
+    console.log(`🔵 Aldi: ${results.aldi.length} Angebote`);
+    console.log(`🟢 Lidl: ${results.lidl.length} Angebote`);
+    console.log('💾 Ergebnisse in deals.json gespeichert');
+
+  } catch (error) {
+    console.error('❌ Kritischer Fehler:', error.message);
+    process.exit(1);
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 })();
 
-// 🟠 MIGROS API
-async function scrapeMigrosAPI() {
-  console.log('🔄 Versuche Migros API...');
+// Haupt-OCR-Scraping-Funktion
+async function scrapeStoreWithOCR(browser, storeName) {
+  const page = await createStealthPage(browser);
+  const deals = [];
+  
   try {
-    // Dynamischer Import für node-fetch
-    const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+    const storeConfig = getStoreConfig(storeName);
     
-    const headers = {
-      'Accept': 'application/json',
-      'Accept-Language': 'de-CH,de;q=0.9',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Referer': 'https://www.migros.ch/',
-      'Origin': 'https://www.migros.ch'
-    };
+    console.log(`  📱 Navigiere zu ${storeName} Website...`);
+    await page.goto(storeConfig.url, {
+      waitUntil: 'networkidle0',
+      timeout: 60000
+    });
 
-    // Versuche verschiedene API-Endpunkte
-    const endpoints = [
-      {
-        url: 'https://www.migros.ch/onesearch-oc-seaapi/public/v5/search?lang=de&limit=100&algorithm=DEFAULT&filters=special-offer:promotion',
-        name: 'Search API'
-      },
-      {
-        url: 'https://hackathon-api.migros.ch/hack/v1/products?limit=100&offset=0',
-        name: 'Hackathon API'
-      }
-    ];
-
-    for (const endpoint of endpoints) {
-      try {
-        if (DEBUG) console.log(`   Teste ${endpoint.name}...`);
-        const response = await fetch(endpoint.url, { headers });
-        
-        if (response.ok) {
-          const data = await response.json();
-          const products = data.products || data.data || [];
-          
-          const deals = products
-            .filter(p => p.price && (p.discount || p.promotion))
-            .map(product => ({
-              name: product.name || product.title || product.description,
-              price: parseFloat(product.price?.value || product.price || 0),
-              unit: product.quantity?.unit || product.unit || 'Stück',
-              category: detectCategory(product.name || product.title),
-              store: 'Migros',
-              discount: product.discount?.text || product.promotion || null
-            }))
-            .filter(deal => deal.price > 0);
-
-          if (deals.length > 0) {
-            console.log(`✅ Migros API: ${deals.length} Angebote gefunden`);
-            return deals;
-          }
-        }
-      } catch (e) {
-        if (DEBUG) console.log(`   ${endpoint.name} fehlgeschlagen:`, e.message);
-      }
+    // Warte auf vollständige Seitenladen
+    await waitForPageToLoad(page);
+    
+    // Scrolle um alle Angebote zu laden
+    await autoScroll(page);
+    
+    console.log(`  📸 Erstelle Screenshots für ${storeName}...`);
+    const screenshots = await captureOfferScreenshots(page, storeConfig);
+    
+    console.log(`  🔍 Verarbeite ${screenshots.length} Screenshots mit OCR...`);
+    
+    // Verarbeite jeden Screenshot
+    for (let i = 0; i < screenshots.length; i++) {
+      const screenshotDeals = await processScreenshotWithOCR(
+        screenshots[i], 
+        storeName,
+        `${storeName}_${i}`
+      );
+      deals.push(...screenshotDeals);
     }
     
-    console.log('⚠️  Migros API nicht verfügbar');
+    // Bereinige und validiere Ergebnisse
+    const cleanedDeals = cleanAndValidateDeals(deals, storeName);
+    
+    console.log(`  ✅ ${storeName}: ${cleanedDeals.length} Angebote durch OCR erkannt`);
+    return cleanedDeals;
+    
+  } catch (error) {
+    console.error(`  ❌ OCR-Fehler bei ${storeName}:`, error.message);
     return [];
-  } catch (err) {
-    console.log('❌ Migros API Fehler:', err.message);
-    return [];
+  } finally {
+    await page.close();
   }
 }
 
-// 🟠 MIGROS Scraper
-async function scrapeMigros(browser) {
-  console.log('🔄 Scrape Migros Website...');
-  const page = await createStealthPage(browser);
-  
-  try {
-    // Verschiedene URLs versuchen
-    const urls = [
-      'https://www.migros.ch/de/offers/home',
-      'https://www.migros.ch/de/cumulus/aktionen',
-      'https://www.migros.ch/de'
-    ];
-    
-    for (const url of urls) {
-      try {
-        if (DEBUG) console.log(`   Versuche ${url}...`);
-        await page.goto(url, {
-          waitUntil: 'domcontentloaded',
-          timeout: 30000
-        });
-        
-        // Warte kurz
-        await page.waitForTimeout(3000);
-        
-        // Screenshot für Debug
-        if (DEBUG) {
-          await page.screenshot({ path: 'debug-migros.png' });
-        }
-        
-        // Suche nach Produkten mit verschiedenen Strategien
-        const deals = await page.evaluate(() => {
-          const products = [];
-          
-          // Strategie 1: Suche nach Preis-Elementen
-          const priceElements = document.querySelectorAll('[class*="price"], [data-testid*="price"], span:has-text("CHF"), span:has-text(".-")');
-          
-          priceElements.forEach(priceEl => {
-            const priceText = priceEl.textContent || '';
-            const price = parseFloat(priceText.match(/[\d.]+/)?.[0] || 0);
-            
-            if (price > 0 && price < 100) { // Vernünftiger Preisbereich
-              // Suche nach zugehörigem Produktnamen
-              let parent = priceEl.parentElement;
-              let name = null;
-              
-              // Suche in Eltern-Elementen
-              for (let i = 0; i < 5 && parent; i++) {
-                const nameEl = parent.querySelector('h3, h4, [class*="title"], [class*="name"]');
-                if (nameEl && nameEl.textContent) {
-                  name = nameEl.textContent.trim();
-                  break;
-                }
-                parent = parent.parentElement;
-              }
-              
-              if (name && name.length > 3) {
-                products.push({
-                  name: name,
-                  price: price,
-                  unit: priceText.includes('kg') ? 'kg' : 'Stück'
-                });
-              }
-            }
-          });
-          
-          // Entferne Duplikate
-          const unique = products.filter((item, index, self) =>
-            index === self.findIndex((t) => t.name === item.name)
-          );
-          
-          return unique.slice(0, 50); // Max 50 Produkte
-        });
-        
-        if (deals.length > 0) {
-          const migrosDeals = deals.map(deal => ({
-            ...deal,
-            category: detectCategory(deal.name),
-            store: 'Migros'
-          }));
-          console.log(`✅ Migros: ${migrosDeals.length} Angebote gefunden`);
-          return migrosDeals;
-        }
-        
-      } catch (e) {
-        if (DEBUG) console.log(`   Fehler bei ${url}:`, e.message);
-      }
+// Store-spezifische Konfigurationen
+function getStoreConfig(store) {
+  const configs = {
+    migros: {
+      url: 'https://www.migros.ch/de/offers/home',
+      screenshotAreas: [
+        { x: 0, y: 200, width: 1920, height: 800 },
+        { x: 0, y: 1000, width: 1920, height: 800 },
+        { x: 0, y: 1800, width: 1920, height: 800 }
+      ],
+      pricePatterns: [
+        /(\d+[.,]\d{2})\s*CHF/gi,
+        /CHF\s*(\d+[.,]\d{2})/gi,
+        /(\d+[.,]\d{2})\s*Fr\./gi,
+        /(\d+[.,]\d{2})/g
+      ]
+    },
+    coop: {
+      url: 'https://www.coop.ch/de/aktionen/aktuelle-aktionen/c/m_1011',
+      screenshotAreas: [
+        { x: 0, y: 300, width: 1920, height: 900 },
+        { x: 0, y: 1200, width: 1920, height: 900 }
+      ],
+      pricePatterns: [
+        /(\d+[.,]\d{2})\s*CHF/gi,
+        /CHF\s*(\d+[.,]\d{2})/gi,
+        /(\d+[.,]\d{2})/g
+      ]
+    },
+    aldi: {
+      url: 'https://www.aldi-suisse.ch/de/aktionen-und-angebote/',
+      screenshotAreas: [
+        { x: 0, y: 400, width: 1920, height: 1000 },
+        { x: 0, y: 1400, width: 1920, height: 1000 }
+      ],
+      pricePatterns: [
+        /(\d+[.,]\d{2})/g,
+        /(\d+[.,]-{1,2})/g,
+        /(\d+)\.-/g
+      ]
+    },
+    lidl: {
+      url: 'https://www.lidl.ch/c/de-CH/lidl-plus-angebote/a10020520?channel=store&tabCode=Current_Sales_Week',
+      screenshotAreas: [
+        { x: 0, y: 250, width: 1920, height: 1200 },
+        { x: 0, y: 1450, width: 1920, height: 1000 }
+      ],
+      pricePatterns: [
+        /(\d+[.,]\d{2})/g,
+        /(\d+)\.-/g
+      ]
     }
-    
-    console.log('⚠️  Migros: Keine Angebote gefunden');
-    return [];
-    
-  } catch (err) {
-    console.error('❌ Migros Scraper Fehler:', err.message);
-    return [];
-  } finally {
-    await page.close();
-  }
-}
-
-// 🔴 COOP
-async function scrapeCoop(browser) {
-  console.log('🔄 Scrape Coop...');
-  const page = await createStealthPage(browser);
+  };
   
-  try {
-    await page.goto('https://www.coop.ch/de/aktionen/aktuelle-aktionen/c/m_1011', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000
-    });
-    
-    await page.waitForTimeout(3000);
-    
-    // Vereinfachte Produktsuche
-    const deals = await page.evaluate(() => {
-      const products = [];
-      
-      // Suche alle Elemente die wie Produkte aussehen
-      const elements = document.querySelectorAll('article, div[class*="product"], div[class*="tile"], div[class*="card"]');
-      
-      elements.forEach(el => {
-        const text = el.textContent || '';
-        
-        // Suche Preis
-        const priceMatch = text.match(/(\d+[.,]\d{2})/);
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[1].replace(',', '.'));
-          
-          // Suche Produktname (erste Überschrift oder längster Text)
-          const headings = el.querySelectorAll('h1, h2, h3, h4, h5, span[class*="title"], span[class*="name"]');
-          let name = '';
-          
-          headings.forEach(h => {
-            const hText = h.textContent?.trim() || '';
-            if (hText.length > name.length && hText.length < 100) {
-              name = hText;
-            }
-          });
-          
-          if (name && price > 0 && price < 100) {
-            products.push({
-              name: name,
-              price: price,
-              unit: text.includes('kg') ? 'kg' : 'Stück'
-            });
-          }
-        }
-      });
-      
-      return products.slice(0, 50);
-    });
-    
-    const coopDeals = deals.map(deal => ({
-      ...deal,
-      category: detectCategory(deal.name),
-      store: 'Coop'
-    }));
-    
-    console.log(`✅ Coop: ${coopDeals.length} Angebote`);
-    return coopDeals;
-    
-  } catch (err) {
-    console.error('❌ Coop Fehler:', err.message);
-    return [];
-  } finally {
-    await page.close();
-  }
+  return configs[store] || configs.migros;
 }
 
-// 🔵 ALDI
-async function scrapeAldi(browser) {
-  console.log('🔄 Scrape Aldi...');
-  const page = await createStealthPage(browser);
-  
-  try {
-    // Aldi URL für aktuelle Woche
-    const today = new Date();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - today.getDay() + 1);
-    const dateStr = `${monday.getDate()}.${monday.getMonth() + 1}.${monday.getFullYear()}`;
-    
-    const url = `https://www.aldi-suisse.ch/de/aktionen-und-angebote/w.${dateStr}.html`;
-    console.log(`   URL: ${url}`);
-    
-    await page.goto(url, {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000
-    });
-    
-    await page.waitForTimeout(3000);
-    
-    const deals = await page.evaluate(() => {
-      const products = [];
-      const elements = document.querySelectorAll('[class*="article"], [class*="product"], article');
-      
-      elements.forEach(el => {
-        const nameEl = el.querySelector('h3, h4, [class*="title"]');
-        const priceEl = el.querySelector('[class*="price"]');
-        
-        if (nameEl && priceEl) {
-          const name = nameEl.textContent?.trim();
-          const priceText = priceEl.textContent || '';
-          const price = parseFloat(priceText.match(/[\d.]+/)?.[0] || 0);
-          
-          if (name && price > 0) {
-            products.push({
-              name: name,
-              price: price,
-              unit: 'Stück'
-            });
-          }
-        }
-      });
-      
-      return products.slice(0, 50);
-    });
-    
-    const aldiDeals = deals.map(deal => ({
-      ...deal,
-      category: detectCategory(deal.name),
-      store: 'Aldi'
-    }));
-    
-    console.log(`✅ Aldi: ${aldiDeals.length} Angebote`);
-    return aldiDeals;
-    
-  } catch (err) {
-    console.error('❌ Aldi Fehler:', err.message);
-    return [];
-  } finally {
-    await page.close();
-  }
-}
-
-// 🟢 LIDL
-async function scrapeLidl(browser) {
-  console.log('🔄 Scrape Lidl...');
-  const page = await createStealthPage(browser);
-  
-  try {
-    await page.goto('https://www.lidl.ch', {
-      waitUntil: 'domcontentloaded',
-      timeout: 30000
-    });
-    
-    await page.waitForTimeout(3000);
-    
-    // Versuche Angebote zu finden
-    const deals = await page.evaluate(() => {
-      const products = [];
-      
-      // Suche nach Produktkarten
-      const cards = document.querySelectorAll('[class*="product"], [class*="article"], [class*="offer"]');
-      
-      cards.forEach(card => {
-        const text = card.textContent || '';
-        const priceMatch = text.match(/(\d+[.,]\d{2})/);
-        
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[1].replace(',', '.'));
-          const nameEl = card.querySelector('h3, h4, [class*="title"], [class*="name"]');
-          const name = nameEl?.textContent?.trim();
-          
-          if (name && price > 0 && price < 100) {
-            products.push({
-              name: name,
-              price: price,
-              unit: 'Stück'
-            });
-          }
-        }
-      });
-      
-      return products.slice(0, 50);
-    });
-    
-    const lidlDeals = deals.map(deal => ({
-      ...deal,
-      category: detectCategory(deal.name),
-      store: 'Lidl'
-    }));
-    
-    console.log(`✅ Lidl: ${lidlDeals.length} Angebote`);
-    return lidlDeals;
-    
-  } catch (err) {
-    console.error('❌ Lidl Fehler:', err.message);
-    return [];
-  } finally {
-    await page.close();
-  }
-}
-
-// Hilfsfunktionen
-
+// Erstelle stealth Browser-Page
 async function createStealthPage(browser) {
   const page = await browser.newPage();
   
-  // Setze realistische Browser-Eigenschaften
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-  
+  // Setze Schweizer Headers
   await page.setExtraHTTPHeaders({
-    'Accept-Language': 'de-CH,de;q=0.9,en;q=0.8',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1'
+    'Accept-Language': 'de-CH,de;q=0.9,fr-CH;q=0.8,en;q=0.7',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
   });
 
-  // Anti-Detection
+  // Überschreibe WebDriver-Eigenschaften
   await page.evaluateOnNewDocument(() => {
-    // Chrome wegmachen
     Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    Object.defineProperty(navigator, 'languages', { get: () => ['de-CH', 'de', 'en'] });
+    Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
     
-    // Plugins vortäuschen
-    Object.defineProperty(navigator, 'plugins', {
-      get: () => [1, 2, 3, 4, 5]
-    });
-    
-    // Sprachen
-    Object.defineProperty(navigator, 'languages', {
-      get: () => ['de-CH', 'de', 'en-US', 'en']
-    });
+    // Überschreibe Permissions
+    const originalQuery = window.navigator.permissions.query;
+    window.navigator.permissions.query = (parameters) => (
+      parameters.name === 'notifications' ?
+        Promise.resolve({ state: Notification.permission }) :
+        originalQuery(parameters)
+    );
   });
 
   await page.setViewport({ width: 1920, height: 1080 });
-  
   return page;
 }
 
+// Warte auf vollständiges Laden der Seite
+async function waitForPageToLoad(page) {
+  try {
+    await page.waitForSelector('body', { timeout: 30000 });
+    await page.waitForTimeout(3000);
+    
+    // Prüfe auf Cloudflare oder andere Schutzmaßnahmen
+    const hasProtection = await page.$('.cf-browser-verification, #cf-wrapper, .challenge-running');
+    if (hasProtection) {
+      console.log('    ⏳ Anti-Bot-Schutz erkannt, warte...');
+      await page.waitForTimeout(15000);
+    }
+    
+  } catch (e) {
+    console.log('    ⚠️ Seiten-Warnung ignoriert');
+  }
+}
+
+// Auto-Scroll durch die Seite
+async function autoScroll(page) {
+  await page.evaluate(async () => {
+    await new Promise((resolve) => {
+      let totalHeight = 0;
+      const distance = 200;
+      const maxHeight = 5000; // Begrenze Scroll-Tiefe
+      
+      const timer = setInterval(() => {
+        const scrollHeight = Math.min(document.body.scrollHeight, maxHeight);
+        window.scrollBy(0, distance);
+        totalHeight += distance;
+
+        if(totalHeight >= scrollHeight){
+          clearInterval(timer);
+          resolve();
+        }
+      }, 200);
+    });
+  });
+  
+  await page.waitForTimeout(3000);
+}
+
+// Erstelle Screenshots der Angebots-Bereiche
+async function captureOfferScreenshots(page, storeConfig) {
+  const screenshots = [];
+  
+  for (const area of storeConfig.screenshotAreas) {
+    try {
+      const screenshot = await page.screenshot({
+        clip: area,
+        type: 'png'
+      });
+      
+      // Optimiere Bild für OCR
+      const optimizedImage = await optimizeImageForOCR(screenshot);
+      screenshots.push(optimizedImage);
+      
+    } catch (error) {
+      console.log(`    ⚠️ Screenshot fehlgeschlagen:`, error.message);
+    }
+  }
+  
+  return screenshots;
+}
+
+// Bildoptimierung für bessere OCR-Ergebnisse
+async function optimizeImageForOCR(imageBuffer) {
+  try {
+    const optimized = await sharp(imageBuffer)
+      .resize(null, 1600, { withoutEnlargement: false })
+      .sharpen(1.5)
+      .normalize()
+      .threshold(120)
+      .png()
+      .toBuffer();
+      
+    return optimized;
+  } catch (error) {
+    console.log('    ⚠️ Bildoptimierung fehlgeschlagen, verwende Original');
+    return imageBuffer;
+  }
+}
+
+// OCR-Verarbeitung eines Screenshots
+async function processScreenshotWithOCR(imageBuffer, store, identifier) {
+  const deals = [];
+  
+  try {
+    console.log(`    🔤 OCR-Analyse für ${identifier}...`);
+    
+    const { data: { text, confidence } } = await Tesseract.recognize(
+      imageBuffer,
+      OCR_CONFIG.lang,
+      OCR_CONFIG.options
+    );
+    
+    console.log(`    📊 OCR-Vertrauen: ${confidence.toFixed(1)}%`);
+    
+    if (confidence < 20) {
+      console.log('    ⚠️ Niedrige OCR-Qualität');
+      return [];
+    }
+    
+    // Extrahiere Angebote aus erkanntem Text
+    const extractedDeals = extractDealsFromOCRText(text, store);
+    deals.push(...extractedDeals);
+    
+    // Debug: Speichere OCR-Text wenn Debug-Modus aktiv
+    if (process.env.DEBUG_OCR === 'true') {
+      await fs.writeFile(`debug_${identifier}.txt`, text).catch(() => {});
+    }
+    
+  } catch (error) {
+    console.error(`    ❌ OCR fehlgeschlagen für ${identifier}:`, error.message);
+  }
+  
+  return deals;
+}
+
+// Extrahiere Deals aus OCR-Text
+function extractDealsFromOCRText(text, store) {
+  const deals = [];
+  const lines = text.split('\n').filter(line => line.trim().length > 2);
+  
+  const storeConfig = getStoreConfig(store);
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+    const prevLine = i > 0 ? lines[i - 1].trim() : '';
+    
+    // Suche nach Preisen mit allen Patterns
+    for (const pricePattern of storeConfig.pricePatterns) {
+      const priceMatches = line.match(pricePattern);
+      
+      if (priceMatches) {
+        for (const priceMatch of priceMatches) {
+          const price = parsePrice(priceMatch);
+          
+          if (price > 0.50 && price < 300) {
+            const searchText = `${prevLine} ${line} ${nextLine}`;
+            const productName = extractProductName(searchText, priceMatch);
+            
+            if (productName && productName.length > 3 && productName.length < 60) {
+              const deal = {
+                name: cleanProductName(productName),
+                price: price,
+                unit: extractUnit(searchText) || 'Stück',
+                category: detectCategory(productName),
+                store: store.charAt(0).toUpperCase() + store.slice(1),
+                ocrSource: true
+              };
+              
+              if (!isDuplicate(deals, deal)) {
+                deals.push(deal);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return deals;
+}
+
+// Parse Preis aus Text
+function parsePrice(priceText) {
+  const cleanPrice = priceText
+    .replace(/[^\d.,-]/g, '')
+    .replace(',', '.')
+    .replace(/-+$/, ''); // Entferne trailing dashes
+  
+  const price = parseFloat(cleanPrice);
+  return isNaN(price) ? 0 : price;
+}
+
+// Extrahiere Produktnamen
+function extractProductName(text, excludePrice) {
+  let cleanText = text.replace(excludePrice, '').trim();
+  
+  // Entferne häufige OCR-Artefakte
+  cleanText = cleanText
+    .replace(/[|\\\/]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Suche nach sinnvollen Produktnamen
+  const namePatterns = [
+    /([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-Za-zÄÖÜäöüß]+)*)/g,
+    /([A-Za-zÄÖÜäöüß]{4,}(?:\s+[A-Za-zÄÖÜäöüß]+){0,3})/g
+  ];
+  
+  for (const pattern of namePatterns) {
+    const matches = cleanText.match(pattern);
+    if (matches) {
+      const validNames = matches
+        .filter(m => m.length > 3 && m.length < 50)
+        .filter(m => !/^\d/.test(m))
+        .filter(m => !isCommonOCRNoise(m));
+      
+      if (validNames.length > 0) {
+        return validNames[0];
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Prüfe auf häufige OCR-Fehler
+function isCommonOCRNoise(text) {
+  const noisePatterns = [
+    /^(CHF|Fr\.|EUR|USD|www|http|\.com)$/i,
+    /^[^a-zA-ZÄÖÜäöüß]*$/,
+    /^(und|oder|mit|von|für|pro|per|ab|bis|ca)$/i
+  ];
+  
+  return noisePatterns.some(pattern => pattern.test(text));
+}
+
+// Bereinige Produktnamen
+function cleanProductName(name) {
+  return name
+    .replace(/[^\w\säöüÄÖÜß-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// Extrahiere Einheiten
+function extractUnit(text) {
+  const unitPatterns = [
+    /(\d+\s*g)\b/i,
+    /(\d+\s*kg)\b/i,
+    /(\d+\s*ml)\b/i,
+    /(\d+\s*l)\b/i,
+    /(\d+\s*stück|\d+\s*stk)\b/i,
+    /(pro\s*kg|per\s*kg)/i,
+    /(pro\s*100g|per\s*100g)/i
+  ];
+  
+  for (const pattern of unitPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return match[1].replace(/\s+/g, '');
+    }
+  }
+  
+  return 'Stück';
+}
+
+// Erkenne Kategorien
 function detectCategory(name) {
   if (!name) return 'Sonstiges';
   
   name = name.toLowerCase();
   const categories = {
-    'Fleisch': ['fleisch', 'hack', 'steak', 'schnitzel', 'wurst', 'speck', 'schinken', 'salami'],
-    'Geflügel': ['huhn', 'poulet', 'hähnchen', 'pute', 'ente', 'geflügel'],
-    'Fisch': ['lachs', 'fisch', 'forelle', 'thunfisch', 'garnelen'],
-    'Milchprodukte': ['milch', 'joghurt', 'jogurt', 'rahm', 'butter', 'käse', 'quark'],
-    'Gemüse': ['tomate', 'salat', 'gurke', 'karotte', 'zwiebel', 'gemüse', 'broccoli'],
-    'Obst': ['apfel', 'banane', 'birne', 'traube', 'orange', 'beeren', 'obst'],
-    'Getränke': ['cola', 'wasser', 'saft', 'wein', 'bier', 'limonade'],
-    'Brot': ['brot', 'zopf', 'toast', 'brötchen', 'gipfeli'],
-    'Grundnahrung': ['nudeln', 'pasta', 'reis', 'mehl', 'zucker'],
-    'Tiefkühl': ['tiefkühl', 'tk', 'eis', 'pizza', 'pommes']
+    'Fleisch': ['fleisch', 'hack', 'steak', 'schnitzel', 'wurst', 'speck', 'schinken', 'salami', 'cervelat'],
+    'Geflügel': ['huhn', 'poulet', 'hähnchen', 'pute', 'ente', 'geflügel', 'wings', 'nuggets'],
+    'Fisch': ['lachs', 'fisch', 'forelle', 'thunfisch', 'dorsch', 'seelachs', 'garnelen', 'crevetten'],
+    'Milchprodukte': ['milch', 'joghurt', 'jogurt', 'rahm', 'butter', 'käse', 'quark', 'mozzarella'],
+    'Gemüse': ['tomate', 'salat', 'gurke', 'karotte', 'rüebli', 'zwiebel', 'broccoli', 'spinat', 'peperoni'],
+    'Obst': ['apfel', 'banane', 'birne', 'traube', 'orange', 'mandarine', 'kiwi', 'beeren'],
+    'Getränke': ['cola', 'wasser', 'saft', 'wein', 'bier', 'limonade', 'energy', 'drink', 'tee', 'kaffee'],
+    'Brot': ['brot', 'zopf', 'toast', 'brötchen', 'weggli', 'gipfeli', 'croissant', 'baguette'],
+    'Grundnahrung': ['nudeln', 'pasta', 'reis', 'mehl', 'zucker', 'teigwaren', 'spaghetti'],
+    'Tiefkühl': ['tiefkühl', 'tk', 'eis', 'glace', 'pizza', 'pommes', 'frozen'],
+    'Süsswaren': ['schokolade', 'schoggi', 'bonbon', 'gummibärchen', 'keks', 'guetzli'],
+    'Snacks': ['chips', 'nüsse', 'popcorn', 'cracker', 'snack']
   };
   
   for (const [cat, keywords] of Object.entries(categories)) {
@@ -507,63 +505,30 @@ function detectCategory(name) {
   return 'Sonstiges';
 }
 
-function getNextUpdateDate() {
-  const now = new Date();
-  const day = now.getDay();
-  const offset = (day === 4) ? 4 : (day < 4 ? 4 - day : 8 - day);
-  const next = new Date(now.getTime() + offset * 24 * 60 * 60 * 1000);
-  next.setHours(6, 0, 0, 0);
-  return next.toISOString();
+// Prüfe auf Duplikate
+function isDuplicate(existingDeals, newDeal) {
+  return existingDeals.some(deal => 
+    deal.name.toLowerCase() === newDeal.name.toLowerCase() &&
+    Math.abs(deal.price - newDeal.price) < 0.10
+  );
 }
 
-// Notfall-Daten Generator
-function generateFallbackData() {
-  console.log('📦 Generiere Beispiel-Angebote für Demo...');
-  
-  const beispielProdukte = {
-    migros: [
-      { name: 'Bio Rindshackfleisch', price: 8.90, unit: '400g', category: 'Fleisch' },
-      { name: 'Pouletbrust', price: 9.50, unit: '500g', category: 'Geflügel' },
-      { name: 'Rispentomaten', price: 2.95, unit: '1kg', category: 'Gemüse' },
-      { name: 'Barilla Spaghetti', price: 1.95, unit: '500g', category: 'Grundnahrung' },
-      { name: 'Jasmin Reis', price: 3.20, unit: '1kg', category: 'Grundnahrung' },
-      { name: 'Vollmilch', price: 1.65, unit: '1L', category: 'Milchprodukte' }
-    ],
-    coop: [
-      { name: 'Atlantik Lachs', price: 12.95, unit: '250g', category: 'Fisch' },
-      { name: 'Kartoffeln festkochend', price: 2.95, unit: '2.5kg', category: 'Gemüse' },
-      { name: 'Naturaplan Bio Eier', price: 4.95, unit: '6 Stück', category: 'Eier' },
-      { name: 'Emmentaler mild', price: 4.50, unit: '200g', category: 'Milchprodukte' },
-      { name: 'Zopf', price: 2.50, unit: '400g', category: 'Brot' }
-    ],
-    aldi: [
-      { name: 'Schweineschnitzel', price: 7.99, unit: '400g', category: 'Fleisch' },
-      { name: 'Broccoli', price: 1.99, unit: '500g', category: 'Gemüse' },
-      { name: 'Freilandeier', price: 3.79, unit: '10 Stück', category: 'Eier' },
-      { name: 'Buttertoast', price: 1.49, unit: '500g', category: 'Brot' },
-      { name: 'Natur Joghurt', price: 0.89, unit: '500g', category: 'Milchprodukte' }
-    ],
-    lidl: [
-      { name: 'Pizza Margherita', price: 2.99, unit: '3 Stück', category: 'Tiefkühl' },
-      { name: 'Blattspinat TK', price: 1.49, unit: '600g', category: 'Tiefkühl' },
-      { name: 'Gala Äpfel', price: 2.49, unit: '1kg', category: 'Obst' },
-      { name: 'Bananen', price: 1.89, unit: '1kg', category: 'Obst' },
-      { name: 'Mineralwasser', price: 0.25, unit: '1.5L', category: 'Getränke' }
-    ]
-  };
-  
-  // Füge Store-Info hinzu
-  Object.entries(beispielProdukte).forEach(([store, products]) => {
-    beispielProdukte[store] = products.map(p => ({
-      ...p,
-      store: store.charAt(0).toUpperCase() + store.slice(1),
-      discount: Math.random() > 0.7 ? `-${Math.floor(Math.random() * 30 + 10)}%` : null
+// Bereinige und validiere Endergebnisse
+function cleanAndValidateDeals(deals, store) {
+  return deals
+    .filter(deal => 
+      deal.name && 
+      deal.name.length > 3 &&
+      deal.name.length < 60 &&
+      deal.price > 0.50 && 
+      deal.price < 300 &&
+      !deal.name.includes('undefined') &&
+      !/^\d+$/.test(deal.name) // Keine reinen Zahlen
+    )
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 40) // Max 40 Angebote pro Store
+    .map(deal => ({
+      ...deal,
+      price: Math.round(deal.price * 100) / 100 // Runde auf 2 Dezimalstellen
     }));
-  });
-  
-  return {
-    ...beispielProdukte,
-    lastUpdate: new Date().toISOString(),
-    nextUpdate: getNextUpdateDate()
-  };
 }
