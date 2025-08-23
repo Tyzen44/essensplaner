@@ -401,37 +401,202 @@ function parsePrice(priceText) {
 }
 
 // Extrahiere Produktnamen
-function extractProductName(text, excludePrice) {
+// Ersetzen Sie diese Funktionen in Ihrem scraper.js für bessere Produkterkennung:
+
+function extractDealsFromOCRText(text, store) {
+  const deals = [];
+  const lines = text.split('\n').filter(line => line.trim().length > 2);
+  
+  console.log(`    📝 Analysiere ${lines.length} Textzeilen für ${store}...`);
+  
+  // Debug: Zeige ersten OCR-Text
+  if (process.env.DEBUG_OCR === 'true') {
+    console.log('🔍 OCR-Text Sample:', text.substring(0, 200));
+  }
+  
+  const pricePatterns = [
+    /(\d{1,3}[.,]\d{2})\s*CHF/gi,
+    /CHF\s*(\d{1,3}[.,]\d{2})/gi,
+    /(\d{1,3}[.,]\d{2})\s*Fr\./gi,
+    /(\d{1,3}[.,]-{1,2})/gi,
+    /(\d{1,3}\.\d{2})/g,
+    // Neue Patterns für bessere Erkennung:
+    /(\d{1,2}[.,]\d{2})/g,
+    /Fr\.\s*(\d{1,3}[.,]\d{2})/gi
+  ];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+    const prevLine = i > 0 ? lines[i - 1].trim() : '';
+    
+    // Erweiterte Suche in 3 Zeilen
+    const searchText = `${prevLine} ${line} ${nextLine}`;
+    
+    for (const pricePattern of pricePatterns) {
+      const priceMatches = line.match(pricePattern);
+      
+      if (priceMatches) {
+        for (const priceMatch of priceMatches) {
+          const price = parsePrice(priceMatch);
+          
+          if (price > 0.50 && price < 300) {
+            // VERBESSERTE Produktnamen-Extraktion
+            const productName = extractBetterProductName(searchText, priceMatch, store);
+            
+            if (productName && isValidProductName(productName)) {
+              const deal = {
+                name: cleanProductName(productName),
+                price: price,
+                unit: extractUnit(searchText) || 'Stück',
+                category: detectCategory(productName),
+                store: store.charAt(0).toUpperCase() + store.slice(1),
+                ocrSource: true
+              };
+              
+              if (!isDuplicateImproved(deals, deal)) {
+                deals.push(deal);
+                console.log(`    ✨ Gefunden: ${deal.name} - CHF ${deal.price}`);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  console.log(`    🎯 ${deals.length} Angebote aus OCR extrahiert`);
+  return deals;
+}
+
+// NEUE: Verbesserte Produktnamen-Extraktion
+function extractBetterProductName(text, excludePrice, store) {
   let cleanText = text.replace(excludePrice, '').trim();
   
   // Entferne häufige OCR-Artefakte
   cleanText = cleanText
-    .replace(/[|\\\/]+/g, ' ')
+    .replace(/[|\\\/\[\]{}()]/g, ' ')
     .replace(/\s+/g, ' ')
+    .replace(/^\W+|\W+$/g, '')
     .trim();
   
-  // Suche nach sinnvollen Produktnamen
-  const namePatterns = [
-    /([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-Za-zÄÖÜäöüß]+)*)/g,
-    /([A-Za-zÄÖÜäöüß]{4,}(?:\s+[A-Za-zÄÖÜäöüß]+){0,3})/g
+  // Store-spezifische Produktnamen-Patterns
+  const storePatterns = {
+    migros: [
+      /M-Budget\s+([A-Za-zÄÖÜäöüß\s]{3,30})/gi,
+      /Bio\s+([A-Za-zÄÖÜäöüß\s]{3,30})/gi,
+      /([A-ZÄÖÜ][a-zäöüß]{3,}\s+[A-Za-zÄÖÜäöüß\s]{2,25})/g
+    ],
+    coop: [
+      /Qualité\s+([A-Za-zÄÖÜäöüß\s]{3,30})/gi,
+      /Prix\s+Garantie\s+([A-Za-zÄÖÜäöüß\s]{3,30})/gi,
+      /([A-ZÄÖÜ][a-zäöüß]{3,}\s+[A-Za-zÄÖÜäöüß\s]{2,25})/g
+    ],
+    aldi: [
+      /([A-ZÄÖÜ][a-zäöüß]{2,}\s+[A-Za-zÄÖÜäöüß\s]{2,25})/g,
+      /Simply\s+([A-Za-zÄÖÜäöüß\s]{3,25})/gi
+    ],
+    lidl: [
+      /Lidl\s+([A-Za-zÄÖÜäöüß\s]{3,25})/gi,
+      /([A-ZÄÖÜ][a-zäöüß]{2,}\s+[A-Za-zÄÖÜäöüß\s]{2,25})/g
+    ]
+  };
+  
+  // Allgemeine Patterns als Fallback
+  const generalPatterns = [
+    // Schweizer Lebensmittel-spezifische Begriffe
+    /(Schweizer\s+[A-Za-zÄÖÜäöüß]{3,20})/gi,
+    /(Bio\s+[A-Za-zÄÖÜäöüß]{3,20})/gi,
+    /(Frische\s+[A-Za-zÄÖÜäöüß]{3,20})/gi,
+    
+    // Produktkategorien
+    /([A-ZÄÖÜ][a-zäöüß]{3,}(?:fleisch|brot|käse|milch|joghurt))/gi,
+    /([A-ZÄÖÜ][a-zäöüß]{3,}(?:salat|tomate|karotte|zwiebel))/gi,
+    /([A-ZÄÖÜ][a-zäöüß]{3,}(?:apfel|banane|orange|birne))/gi,
+    
+    // Allgemeine Produktnamen (mindestens 2 Wörter)
+    /([A-ZÄÖÜ][a-zäöüß]{2,}\s+[A-ZÄÖÜ]?[a-zäöüß]{2,}(?:\s+[A-Za-zÄÖÜäöüß]{2,})?)/g,
+    
+    // Einzelwörter nur wenn sie Lebensmittel sind
+    /(Hackfleisch|Rindfleisch|Schweinefleisch|Pouletbrust|Lachs|Forelle)/gi,
+    /(Vollmilch|Magermilch|Naturjoghurt|Mozzarella|Emmentaler|Gruyère)/gi,
+    /(Tomaten|Gurken|Karotten|Zwiebeln|Salat|Broccoli|Spinat)/gi,
+    /(Äpfel|Bananen|Orangen|Birnen|Trauben|Beeren)/gi,
+    /(Vollkornbrot|Weissbrot|Zopf|Gipfeli|Toast)/gi
   ];
   
-  for (const pattern of namePatterns) {
+  // Versuche store-spezifische Patterns
+  const patterns = storePatterns[store.toLowerCase()] || generalPatterns;
+  
+  for (const pattern of patterns) {
     const matches = cleanText.match(pattern);
     if (matches) {
       const validNames = matches
-        .filter(m => m.length > 3 && m.length < 50)
-        .filter(m => !/^\d/.test(m))
-        .filter(m => !isCommonOCRNoise(m));
+        .map(match => match.replace(/^\W+|\W+$/g, '').trim())
+        .filter(name => name.length >= 4 && name.length <= 40)
+        .filter(name => isValidProductName(name))
+        .filter(name => !isOCRNoise(name));
       
       if (validNames.length > 0) {
-        return validNames[0];
+        // Bevorzuge längere, beschreibendere Namen
+        return validNames.sort((a, b) => b.length - a.length)[0];
       }
+    }
+  }
+  
+  // Als letzter Versuch: Suche nach einzelnen sinnvollen Wörtern
+  const foodWords = [
+    'Hackfleisch', 'Rindfleisch', 'Poulet', 'Lachs', 'Forelle', 'Thunfisch',
+    'Vollmilch', 'Joghurt', 'Käse', 'Butter', 'Rahm', 'Quark',
+    'Tomaten', 'Gurken', 'Salat', 'Karotten', 'Zwiebeln', 'Broccoli',
+    'Äpfel', 'Bananen', 'Orangen', 'Birnen', 'Trauben',
+    'Brot', 'Toast', 'Zopf', 'Pasta', 'Nudeln', 'Reis'
+  ];
+  
+  for (const word of foodWords) {
+    if (cleanText.toLowerCase().includes(word.toLowerCase())) {
+      return word;
     }
   }
   
   return null;
 }
+
+// NEUE: Bessere Produktnamen-Validierung
+function isValidProductName(name) {
+  if (!name || typeof name !== 'string') return false;
+  if (name.length < 3 || name.length > 50) return false;
+  
+  // Ungültige Patterns
+  const invalidPatterns = [
+    /^(CHF|Fr\.|EUR|USD)$/i,
+    /^[IV]+$/,  // Römische Zahlen
+    /^[^a-zA-ZÄÖÜäöüß]*$/,  // Keine Buchstaben
+    /^(und|oder|mit|von|für|pro|per|ab|bis|ca|nur|alle)$/i,
+    /^(Mo|Di|Mi|Do|Fr|Sa|So)$/i,
+    /^(Jan|Feb|Mär|Apr|Mai|Jun|Jul|Aug|Sep|Okt|Nov|Dez)$/i,
+    /^\d+[.,]\d+$/,  // Pure Zahlen
+    /^.{1,2}$/,      // Zu kurz
+    /^(Java|Stück\s*I|Ving\s*Mo\s*Po)$/i  // Bekannte OCR-Artefakte
+  ];
+  
+  return !invalidPatterns.some(pattern => pattern.test(name));
+}
+
+// Verbesserte Duplikat-Erkennung
+function isDuplicateImproved(existingDeals, newDeal) {
+  return existingDeals.some(deal => {
+    const nameMatch = deal.name.toLowerCase() === newDeal.name.toLowerCase();
+    const priceMatch = Math.abs(deal.price - newDeal.price) < 0.05;
+    const storeMatch = deal.store === newDeal.store;
+    
+    return nameMatch && (priceMatch || storeMatch);
+  });
+}
+
+// Debug-Logging verbessern
+console.log('🔧 Verbesserte OCR-Produkterkennung aktiviert');
+console.log('✨ Features: Store-spezifische Patterns, Lebensmittel-Datenbank, OCR-Artefakt-Filter');
 
 // Prüfe auf häufige OCR-Fehler
 function isCommonOCRNoise(text) {
