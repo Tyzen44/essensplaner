@@ -1,11 +1,12 @@
 {
-  "name": "supermarkt-scraper",
-  "version": "2.0.0",
-  "description": "Erweiterter Supermarkt-Angebotsscraper für Migros, Coop, Aldi, Lidl mit Anti-Bot-Umgehung",
+  "name": "ocr-essensplaner",
+  "version": "1.0.0",
+  "description": "OCR-basierter Supermarkt-Scraper für Schweizer Angebote mit Computer Vision",
   "main": "scraper.js",
   "scripts": {
     "start": "node scraper.js",
-    "test": "node scraper.js"
+    "debug": "DEBUG_OCR=true node scraper.js",
+    "test": "node test.js"
   },
   "author": "Sven",
   "license": "MIT",
@@ -13,6 +14,18 @@
     "puppeteer": "^21.11.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "node-fetch": "^3.3.2"
-  }
+    "tesseract.js": "^5.0.4",
+    "sharp": "^0.33.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ocr",
+    "computer-vision",
+    "web-scraping",
+    "supermarket",
+    "switzerland",
+    "essensplaner"
+  ]
 }
